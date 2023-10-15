@@ -3,8 +3,9 @@ package routes
 import (
 	"os"
 	"platform_api/controllers"
-	"github.com/gin-gonic/gin"
+
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func InitRoutes() {
@@ -23,9 +24,10 @@ func InitRoutes() {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 
-	router.GET("/", challenge.GetAllChallenges)
-	router.GET("/id/:id", challenge.GetChallengeById)
-	router.GET("/email/:email", challenge.GetChallengeByEmail)
+	router.GET("/api/v1/platform/challenge", challenge.GetAllChallenges)
+	router.GET("/api/v1/platform/challenge/:id", challenge.GetChallengeById)
+	router.GET("/api/v1/platform/challenge/:email", challenge.GetChallengeByEmail)
 
 	router.Run(":" + PORT)
 }
+
