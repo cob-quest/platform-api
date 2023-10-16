@@ -14,8 +14,8 @@ import (
 )
 
 type ChallengeController struct{}
-var challengeCollection *mongo.Collection = configs.OpenCollection(configs.Client, "challenge")
 
+var challengeCollection *mongo.Collection = configs.OpenCollection(configs.Client, "challenge")
 
 func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -27,7 +27,7 @@ func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 		panic(err)
 	}
 
-	defer cursor.Close(ctx)	
+	defer cursor.Close(ctx)
 
 	var challenges []models.Challenge
 	err = cursor.All(ctx, &challenges)
@@ -39,7 +39,6 @@ func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 
 	c.JSON(http.StatusOK, challenges)
 }
-
 
 func (t ChallengeController) GetChallengeById(c *gin.Context) {
 	challengeId := c.Param("id")
@@ -69,7 +68,7 @@ func (t ChallengeController) GetChallengeById(c *gin.Context) {
 }
 
 func (t ChallengeController) GetChallengeByEmail(c *gin.Context) {
-	email := c.Param("email")	
+	email := c.Param("email")
 	if email == "" {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Email cannot be empty"})
 		return
@@ -94,10 +93,11 @@ func (t ChallengeController) GetChallengeByEmail(c *gin.Context) {
 		return
 	}
 
-	if len(challenges) == 0 {  
+	if len(challenges) == 0 {
 		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No challenges with email found"})
 		return
 	}
 
 	c.JSON(http.StatusOK, challenges)
 }
+
