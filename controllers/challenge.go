@@ -37,7 +37,7 @@ func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, challenges)
+    c.JSON(http.StatusOK, challenges)
 }
 
 func (t ChallengeController) GetChallengeById(c *gin.Context) {
@@ -64,9 +64,10 @@ func (t ChallengeController) GetChallengeById(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, challenge)
+    c.JSON(http.StatusOK, challenge)
 }
 
+// @Summary: Get a challenge by email
 func (t ChallengeController) GetChallengeByEmail(c *gin.Context) {
 	email := c.Param("email")
 	if email == "" {
@@ -98,6 +99,5 @@ func (t ChallengeController) GetChallengeByEmail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, challenges)
+    c.JSON(http.StatusOK, challenges)
 }
-

@@ -50,7 +50,7 @@ func ConnectDB() (client *mongo.Client) {
 func InitIndexes(client * mongo.Client) {
 	challengeCollection := OpenCollection(client, "challenge")
 	challengeIndexModel := mongo.IndexModel{
-		Keys: bson.D{{Key:"image_url", Value: -1}},
+        Keys: bson.D{{Key:"image_name", Value: 1}, {Key:"image_ver", Value: -1}},
 		Options: options.Index().SetUnique(true),
 	}
 	challengeIndexCreated, err := challengeCollection.Indexes().CreateOne(context.Background(), challengeIndexModel)
