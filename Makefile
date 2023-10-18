@@ -26,6 +26,6 @@ docker-build:
 
 # builds a docker image and loads into minikube
 minikube: docker-build
-	minikube image rm ${IMAGE_TAG}
+	minikube image rm ${IMAGE_TAG} 2> /dev/null
 	minikube image load ${IMAGE_TAG}
 
