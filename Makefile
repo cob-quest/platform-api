@@ -21,11 +21,11 @@ clean:
 	rm ./main
 
 # builds a docker image
-docker:
+docker-build:
 	docker build -t ${IMAGE_TAG} -f ./docker/Dockerfile .
 
 # builds a docker image and loads into minikube
-minikube: docker
+minikube: docker-build
 	minikube image rm ${IMAGE_TAG}
 	minikube image load ${IMAGE_TAG}
 
