@@ -9,12 +9,12 @@ import (
 )
 
 func EnvMongoUri() string {
-	err := godotenv.Load("./secrets/.env")
+	err := godotenv.Load("secrets/.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	MONGO_USER := os.Getenv("MONGO_USER")
-	MONGO_PASS := os.Getenv("MONGO_PASS")
-	MONGO_HOSTNAME := os.Getenv("MONGO_HOSTNAME")
-	return fmt.Sprintf("mongodb://%s,%s@%s:%s", MONGO_USER, MONGO_PASS, MONGO_HOSTNAME, "27017")
+	MONGO_USER := os.Getenv("MONGODB_USERNAME")
+	MONGO_PASS := os.Getenv("MONGODB_PASSWORD")
+	MONGO_HOSTNAME := os.Getenv("MONGODB_HOSTNAME")
+	return fmt.Sprintf("mongodb://%s:%s@%s:%s", MONGO_USER, MONGO_PASS, MONGO_HOSTNAME, "27017")
 }
