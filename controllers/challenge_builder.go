@@ -53,7 +53,7 @@ func (t ChallengeBuilderController) GetChallengeByCorID(c *gin.Context) {
 
 	var challenges models.ChallengeBuilder
 
-	filter := bson.D{{Key: "_id", Value: corId}}
+	filter := bson.D{{Key: "corId", Value: corId}}
 	err := challengeBuilderCollection.FindOne(ctx, filter).Decode(&challenges)
 
 	if err != nil {
