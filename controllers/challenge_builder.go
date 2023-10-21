@@ -13,35 +13,35 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ImageBuilderController struct{}
+type ChallengeBuilderController struct{}
 
-var imageBuilderCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
+var challengeBuilderCollection *mongo.Collection = configs.OpenCollection(configs.Client, "challenge_builder")
 
-func (t ImageBuilderController) GetAllImages(c *gin.Context) {
+func (t ChallengeBuilderController) GetAllChallenges(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	options := options.Find()
-	cursor, err := imageBuilderCollection.Find(ctx, bson.M{}, options)
+	cursor, err := challengeBuilderCollection.Find(ctx, bson.M{}, options)
 	if err != nil {
 		panic(err)
 	}
 
 	defer cursor.Close(ctx)
 
-	var images []models.ImageBuilder
-	err = cursor.All(ctx, &images)
+	var challenges []models.ChallengeBuilder
+	err = cursor.All(ctx, &challenges)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve images"})
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve challenges"})
 		return
 	}
 
-	c.JSON(http.StatusOK, images)
+	c.JSON(http.StatusOK, challenges)
 }
 
-// retrieve a list of images by their corID
-func (t ImageBuilderController) GetImageByCorID(c *gin.Context) {
+// retrieve a list of challenges by their corID
+func (t ChallengeBuilderController) GetChallengeByCorID(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "corId cannot be empty"})
@@ -51,19 +51,19 @@ func (t ImageBuilderController) GetImageByCorID(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var images models.ImageBuilder
+	var challenges models.ChallengeBuilder
 
 	filter := bson.D{{Key: "_id", Value: corId}}
-	err := imageBuilderCollection.FindOne(ctx, filter).Decode(&images)
+	err := challengeBuilderCollection.FindOne(ctx, filter).Decode(&challenges)
 
 	if err != nil {
-		msg := "Failed to retrieve image"
+		msg := "Failed to retrieve challenge"
 		if err == mongo.ErrNoDocuments {
-			msg = "No challenge found with given image corId"
+			msg = "No challenge found with given challenge corId"
 		}
 		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: msg})
 		return
 	}
 
-	c.JSON(http.StatusOK, images)
+	c.JSON(http.StatusOK, challenges)
 }

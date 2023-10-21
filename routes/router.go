@@ -11,8 +11,8 @@ import (
 func InitRoutes() {
 	PORT := os.Getenv("SERVER_PORT")
 
-	challenge := new(controllers.ChallengeController)
-	image := new(controllers.ImageBuilderController)
+	challenge := new(controllers.ChallengeBuilderController)
+	image := new(controllers.ImageController)
     process := new(controllers.ProcessController)
 
 	router := gin.Default()
@@ -27,11 +27,10 @@ func InitRoutes() {
 	router.Use(cors.New(config))
 
 	router.GET("/api/v1/platform/image", image.GetAllImages)
-	router.GET("/api/v1/platform/image/:id", image.GetImageByCorID)
+	router.GET("/api/v1/platform/image/:id", image.GetImageById)
 	//router.GET("/api/v1/platform/image/:email", challenge.GetChallengeByEmail)
-
 	router.GET("/api/v1/platform/challenge", challenge.GetAllChallenges)
-	router.GET("/api/v1/platform/challenge/:id", challenge.GetChallengeById)
+	router.GET("/api/v1/platform/challenge/:corId", challenge.GetChallengeByCorID)
 
 	router.GET("/api/v1/platform/process", process.GetAllProcesses)
 	router.GET("/api/v1/platform/process/:corId", process.GetProcessByCorID)
