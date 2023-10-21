@@ -11,8 +11,9 @@ type Process struct {
 	ImageName     string             `json:"imageName" bson:"image_name"`
     CreatorName   string             `json:"creatorName" bson:"creator_name"`
     S3path        string             `json:"s3Path" bson:"s3_path"`
+    Timestamp     primitive.DateTime `json:"timeStamp" bson:"timestamp"`
 }
 
 type ProcessList struct {
-	Processes []Image `json:"processes" bson:",inline"`
+	Processes []Process `json:"processes" bson:",inline"`
 }

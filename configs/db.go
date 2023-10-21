@@ -47,19 +47,16 @@ func ConnectDB() (client *mongo.Client) {
 }
 
 func InitIndexes(client * mongo.Client) {
-	challengeCollection := OpenCollection(client, "challenge")
-	challengeIndexModel := mongo.IndexModel{
+	imageCollection := OpenCollection(client, "image")
+	imageIndexModel := mongo.IndexModel{
         Keys: bson.D{{Key:"image_name", Value: 1}, {Key:"image_ver", Value: -1}},
 		Options: options.Index().SetUnique(true),
 	}
-	challengeIndexCreated, err := challengeCollection.Indexes().CreateOne(context.Background(), challengeIndexModel)
+	imageIndexCreated, err := imageCollection.Indexes().CreateOne(context.Background(), imageIndexModel)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-<<<<<<< Updated upstream
-	fmt.Printf("Created Challenge Index %s\n", challengeIndexCreated)
-=======
     challengeCollection := OpenCollection(client, "challenge_builder")
     challengeIndexModel := mongo.IndexModel{
         Keys: bson.D{{Key: "cor_id", Value: 1}},
@@ -87,7 +84,6 @@ func InitIndexes(client * mongo.Client) {
 	fmt.Printf("Created Image Index %s\n", imageIndexCreated)
 	fmt.Printf("Created Challenge Index %s\n", challengeIndexCreated)
 	fmt.Printf("Created Engine Index %s\n", processIndexCreated)
->>>>>>> Stashed changes
 }
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
