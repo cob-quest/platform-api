@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"platform_api/configs"
 	"platform_api/models"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,9 @@ func (t ProcessController) GetAllProcesses(c *gin.Context) {
 	var process []models.Process
 	err = cursor.All(ctx, &process)
 
+	for i, p := range process {
+		process[i].S3path = strings.SplitAfter(p.S3path, "bucket/")[1]
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve images"})
 		return
@@ -53,7 +57,7 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 
 	var process models.Process
 
-	filter := bson.D{{Key: "_id", Value: corId}}
+	filter := bson.D{{Key: "cor_id", Value: corId}}
 	err := processCollection.FindOne(ctx, filter).Decode(&process)
 
 	if err != nil {
@@ -64,6 +68,10 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: msg})
 		return
 	}
+
+  	path := strings.SplitAfter(process.S3path, "bucket")[1]
+
+  	process.S3path = path
 
 	c.JSON(http.StatusOK, process)
 }
