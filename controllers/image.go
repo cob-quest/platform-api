@@ -15,7 +15,7 @@ import (
 
 type ImageController struct{}
 
-var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image")
+var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
 
 func (t ImageController) GetAllImages(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -52,7 +52,7 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 
 	var image models.Image
 
-	filter := bson.D{{Key: "cor_id", Value: corId}}
+	filter := bson.D{{Key: "corId", Value: corId}}
 	err := imageCollection.FindOne(ctx, filter).Decode(&image)
 
 	if err != nil {

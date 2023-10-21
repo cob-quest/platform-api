@@ -27,7 +27,7 @@ func InitRoutes() {
 	router.Use(cors.New(config))
 
 	router.GET("/api/v1/platform/image", image.GetAllImages)
-	router.GET("/api/v1/platform/image/:id", image.GetImageByCorId)
+	router.GET("/api/v1/platform/image/:corId", image.GetImageByCorId)
 	//router.GET("/api/v1/platform/image/:email", challenge.GetChallengeByEmail)
 	router.GET("/api/v1/platform/challenge", challenge.GetAllChallenges)
 	router.GET("/api/v1/platform/challenge/:corId", challenge.GetChallengeByCorID)
