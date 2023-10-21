@@ -13,7 +13,6 @@ import (
 var Client *mongo.Client = ConnectDB()
 
 func ConnectDB() (client *mongo.Client) {
-	fmt.Println(EnvMongoUri())
 	fmt.Printf("Attempting connection with %s\n", EnvMongoUri())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -58,7 +57,37 @@ func InitIndexes(client * mongo.Client) {
 		log.Fatal(err)
 	}
 
+<<<<<<< Updated upstream
 	fmt.Printf("Created Challenge Index %s\n", challengeIndexCreated)
+=======
+    challengeCollection := OpenCollection(client, "challenge_builder")
+    challengeIndexModel := mongo.IndexModel{
+        Keys: bson.D{{Key: "cor_id", Value: 1}},
+        Options: options.Index().SetUnique(true),
+    }
+    challengeIndexCreated, err := challengeCollection.Indexes().CreateOne(context.Background(), challengeIndexModel)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    processCollection := OpenCollection(client, "process_engine")
+
+	processIndexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "timestamp", Value: 1},
+			{Key: "corId", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+	processIndexCreated, err := processCollection.Indexes().CreateOne(context.Background(), processIndexModel)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Created Image Index %s\n", imageIndexCreated)
+	fmt.Printf("Created Challenge Index %s\n", challengeIndexCreated)
+	fmt.Printf("Created Engine Index %s\n", processIndexCreated)
+>>>>>>> Stashed changes
 }
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
