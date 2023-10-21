@@ -6,9 +6,11 @@ import (
 
 type Image struct {
 	Id        primitive.ObjectID `json:"_id" bson:"_id"`
-	Email     string             `json:"email" bson:"email" validate:"required"`
-	ImageName string             `json:"image_name" bson:"image_name" validate:"required"`
-	ImageVer  string             `json:"image_ver" bson:"image_ver" validate:"required"`
+	CorrelationID string		 `json:"cor_id" bson:"cor_id"`
+	CreatorName     string       `json:"creatorName" bson:"creator_name"`
+	ImageName string             `json:"image_name" bson:"image_name"`
+	ContainerUrl  string         `json:"containerUrl" bson:"container_url"`
+	S3Path		string			`json:"s3Path" bson:"s3_path"`		
 }
 
 type ImageList struct {

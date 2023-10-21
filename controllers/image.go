@@ -37,12 +37,12 @@ func (t ImageController) GetAllImages(c *gin.Context) {
 		return
 	}
 
-    c.JSON(http.StatusOK, images)
+	c.JSON(http.StatusOK, images)
 }
 
-func (t ImageController) GetImageById(c *gin.Context) {
-	imageId := c.Param("id")
-	if imageId == "" {
+func (t ImageController) GetImageByCorId(c *gin.Context) {
+	corId := c.Param("corId")
+	if corId == "" {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "ID cannot be empty"})
 		return
 	}
@@ -52,7 +52,7 @@ func (t ImageController) GetImageById(c *gin.Context) {
 
 	var image models.Image
 
-	filter := bson.D{{Key: "_id", Value: imageId}}
+	filter := bson.D{{Key: "cor_id", Value: corId}}
 	err := imageCollection.FindOne(ctx, filter).Decode(&image)
 
 	if err != nil {
@@ -64,7 +64,7 @@ func (t ImageController) GetImageById(c *gin.Context) {
 		return
 	}
 
-    c.JSON(http.StatusOK, image)
+	c.JSON(http.StatusOK, image)
 }
 
 // @Summary: Get a image by email
@@ -99,5 +99,5 @@ func (t ImageController) GetImageByEmail(c *gin.Context) {
 		return
 	}
 
-    c.JSON(http.StatusOK, images)
+	c.JSON(http.StatusOK, images)
 }
