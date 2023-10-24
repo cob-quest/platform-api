@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -46,11 +47,11 @@ func ConnectDB() (client *mongo.Client) {
 	return client
 }
 
-func InitIndexes(client * mongo.Client) {
+func InitIndexes(client *mongo.Client) {
 	imageCollection := OpenCollection(client, "image")
 	imageIndexModel := mongo.IndexModel{
-        Keys: bson.D{
-			{Key: "cor_id", Value: 1},
+		Keys: bson.D{
+			{Key: "corId", Value: 1},
 		},
 		Options: options.Index().SetUnique(true),
 	}
@@ -59,17 +60,17 @@ func InitIndexes(client * mongo.Client) {
 		log.Fatal(err)
 	}
 
-    challengeCollection := OpenCollection(client, "challenge_builder")
-    challengeIndexModel := mongo.IndexModel{
-        Keys: bson.D{{Key: "cor_id", Value: 1}},
-        Options: options.Index().SetUnique(true),
-    }
-    challengeIndexCreated, err := challengeCollection.Indexes().CreateOne(context.Background(), challengeIndexModel)
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    processCollection := OpenCollection(client, "process_engine")
+	challengeCollection := OpenCollection(client, "challenge_builder")
+	challengeIndexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "corId", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}
+	challengeIndexCreated, err := challengeCollection.Indexes().CreateOne(context.Background(), challengeIndexModel)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	processCollection := OpenCollection(client, "process_engine")
 
 	processIndexModel := mongo.IndexModel{
 		Keys: bson.D{

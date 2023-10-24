@@ -34,14 +34,14 @@ func (t ProcessController) GetAllProcesses(c *gin.Context) {
 	err = cursor.All(ctx, &process)
 
 	for i, p := range process {
-		process[i].S3path = strings.SplitAfter(p.S3path, "bucket/")[1]
+		process[i].S3Path = strings.SplitAfter(p.S3Path, "bucket/")[1]
 	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve images"})
 		return
 	}
 
-    c.JSON(http.StatusOK, process)
+	c.JSON(http.StatusOK, process)
 }
 
 // retrieve a list of processes by their corID
@@ -57,7 +57,7 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 
 	var process models.Process
 
-	filter := bson.D{{Key: "cor_id", Value: corId}}
+	filter := bson.D{{Key: "corId", Value: corId}}
 	err := processCollection.FindOne(ctx, filter).Decode(&process)
 
 	if err != nil {
@@ -69,9 +69,9 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 		return
 	}
 
-  	path := strings.SplitAfter(process.S3path, "bucket")[1]
+	path := strings.SplitAfter(process.S3Path, "bucket")[1]
 
-  	process.S3path = path
+	process.S3Path = path
 
 	c.JSON(http.StatusOK, process)
 }
