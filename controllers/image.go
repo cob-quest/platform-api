@@ -67,18 +67,18 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 	c.JSON(http.StatusOK, image)
 }
 
-// @Summary: Get a image by email
-func (t ImageController) GetImageByEmail(c *gin.Context) {
-	email := c.Param("email")
-	if email == "" {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Email cannot be empty"})
+// @Summary: Get a image by creatorName
+func (t ImageController) GetImageByCreatorName(c *gin.Context) {
+	creatorName := c.Param("creatorName")
+	if creatorName == "" {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "creatorName cannot be empty"})
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	filter := bson.D{{Key: "email", Value: email}}
+	filter := bson.D{{Key: "creatorName", Value: creatorName}}
 	cursor, err := imageCollection.Find(ctx, filter)
 	if err != nil {
 		panic(err)
@@ -95,7 +95,7 @@ func (t ImageController) GetImageByEmail(c *gin.Context) {
 	}
 
 	if len(images) == 0 {
-		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No images with email found"})
+		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No images with creatorName found"})
 		return
 	}
 

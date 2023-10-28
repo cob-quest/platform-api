@@ -1,17 +1,19 @@
 package models
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Process struct {
-	Id            primitive.ObjectID `json:"_id" bson:"_id"`
+    _Id           primitive.ObjectID `json:"_id" bson:"_id"`
 	CorId 		  string             `json:"corId" bson:"corId"`
-	EventSuccess  bool               `json:"eventSuccess" bson:"eventSuccess"`
-	ImageName     string             `json:"imageName" bson:"imageName"`
     CreatorName   string             `json:"creatorName" bson:"creatorName"`
-    S3Path        string             `json:"s3Path" bson:"s3Path"`
-    Timestamp     primitive.DateTime `json:"timestamp" bson:"timestamp"`
+    Event         string             `json:"event" bson:"event"`
+	EventSuccess  bool               `json:"eventSuccess" bson:"eventSuccess"`
+    Timestamp     string             `json:"timestamp" bson:"timestamp"`
+	ImageName     string             `json:"imageName" bson:"imageName"`
+    S3Path        string             `json:"s3Path,omitempty" bson:"s3Path,omitempty"`
+    Duration      int                `json:"duration,omitempty" bson:"duration,omitempty"`
+    Participants  []string           `json:"participants,omitempty" bson:"participants,omitempty"`
+    AssignmentId  string             `json:"assignmentId,omitempty" bson:"assignmentId,omitempty"`
 }
 
 type ProcessList struct {

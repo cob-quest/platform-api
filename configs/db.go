@@ -48,7 +48,7 @@ func ConnectDB() (client *mongo.Client) {
 }
 
 func InitIndexes(client *mongo.Client) {
-	imageCollection := OpenCollection(client, "image")
+	imageCollection := OpenCollection(client, "image_builder")
 	imageIndexModel := mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "corId", Value: 1},
@@ -72,14 +72,22 @@ func InitIndexes(client *mongo.Client) {
 
 	processCollection := OpenCollection(client, "process_engine")
 
-	processIndexModel := mongo.IndexModel{
+	processUniqueIndex := mongo.IndexModel{
 		Keys: bson.D{
-			{Key: "timestamp", Value: 1},
 			{Key: "corId", Value: 1},
 		},
 		Options: options.Index().SetUnique(true),
 	}
-	processIndexCreated, err := processCollection.Indexes().CreateOne(context.Background(), processIndexModel)
+
+    processEventTextModel := mongo.IndexModel{
+        Keys: bson.D{
+            {Key: "event", Value: "text"},
+        },
+    }
+
+    processIndexes := []mongo.IndexModel{processUniqueIndex, processEventTextModel}
+
+	processIndexCreated, err := processCollection.Indexes().CreateMany(context.Background(), processIndexes)
 	if err != nil {
 		log.Fatal(err)
 	}

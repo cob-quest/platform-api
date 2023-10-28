@@ -1,15 +1,15 @@
 package models
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type ChallengeBuilder struct {
-	Id            primitive.ObjectID `json:"_id" bson:"_id"`
+    _Id           primitive.ObjectID `json:"_id" bson:"_id"`
 	CorID 		  string             `json:"corId" bson:"corId"`
-	ChallengeName string             `json:"challengeName" bson:"challengeName"`
+	ImageName     string             `json:"imageName" bson:"imageName"`
 	CreatorName   string             `json:"creatorName" bson:"creatorName"`
-	S3Path        string             `json:"s3Path" bson:"s3Path"`
+    Duration      int                `json:"duration" bson:"duration"`
+    Participants  []string           `json:"participants" bson:"participants"`
+    AssignmentId  string             `json:"assignmentId" bson:"assignmentId"`
 }
 
 type ChallengeBuilderList struct {

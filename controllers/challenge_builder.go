@@ -67,3 +67,38 @@ func (t ChallengeBuilderController) GetChallengeByCorID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, challenges)
 }
+
+// @Summary: Get a image by creatorName
+func (t ChallengeBuilderController) GetChallengeByCreatorName(c *gin.Context) {
+	creatorName := c.Param("creatorName")
+	if creatorName == "" {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "creatorName cannot be empty"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "creatorName", Value: creatorName}}
+	cursor, err := challengeBuilderCollection.Find(ctx, filter)
+	if err != nil {
+		panic(err)
+	}
+
+	defer cursor.Close(ctx)
+
+	var challenge []models.ChallengeBuilder
+	err = cursor.All(ctx, &challenge)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve challenges"})
+		return
+	}
+
+	if len(challenge) == 0 {
+		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No challenges with creatorName found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, challenge)
+}

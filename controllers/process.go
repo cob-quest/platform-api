@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"platform_api/configs"
 	"platform_api/models"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -33,9 +32,6 @@ func (t ProcessController) GetAllProcesses(c *gin.Context) {
 	var process []models.Process
 	err = cursor.All(ctx, &process)
 
-	for i, p := range process {
-		process[i].S3Path = strings.SplitAfter(p.S3Path, "bucket/")[1]
-	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve images"})
 		return
@@ -69,9 +65,76 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 		return
 	}
 
-	path := strings.SplitAfter(process.S3Path, "bucket")[1]
+	c.JSON(http.StatusOK, process)
+}
 
-	process.S3Path = path
+func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
+	creatorName := c.Param("creatorName")
+	if creatorName == "" {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "creatorName cannot be empty"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.D{{Key: "creatorName", Value: creatorName}}
+	cursor, err := processCollection.Find(ctx, filter)
+	if err != nil {
+		panic(err)
+	}
+
+	defer cursor.Close(ctx)
+
+	var process []models.Process
+	err = cursor.All(ctx, &process)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve processes"})
+		return
+	}
+
+	if len(process) == 0 {
+		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No process with creatorName found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, process)
+}
+
+func (t ProcessController) GetProcessByImageName(c *gin.Context) {
+	imageName := c.Param("imageName")
+	if imageName == "" {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "imageName cannot be empty"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.D{
+        {Key: "imageName", Value: imageName},
+        {Key: "$text", Value: bson.D{{Key:"$search", Value: "image"}}},
+    }
+	cursor, err := processCollection.Find(ctx, filter)
+	if err != nil {
+		panic(err)
+	}
+
+	defer cursor.Close(ctx)
+
+	var process []models.Process
+	err = cursor.All(ctx, &process)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve processes. " + err.Error()})
+		return
+	}
+
+	if len(process) == 0 {
+		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No image process found with imageName"})
+		return
+	}
 
 	c.JSON(http.StatusOK, process)
 }

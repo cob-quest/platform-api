@@ -26,14 +26,23 @@ func InitRoutes() {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 
-	router.GET("/api/v1/platform/image", image.GetAllImages)
-	router.GET("/api/v1/platform/image/:corId", image.GetImageByCorId)
-	//router.GET("/api/v1/platform/image/:email", challenge.GetChallengeByEmail)
-	router.GET("/api/v1/platform/challenge", challenge.GetAllChallenges)
-	router.GET("/api/v1/platform/challenge/:corId", challenge.GetChallengeByCorID)
+    v1 := router.Group("/api/v1/platform")
 
-	router.GET("/api/v1/platform/process", process.GetAllProcesses)
-	router.GET("/api/v1/platform/process/:corId", process.GetProcessByCorID)
+    imageGroup := v1.Group("/image")
+	imageGroup.GET("", image.GetAllImages)
+    imageGroup.GET("/:corId", image.GetImageByCorId)
+    imageGroup.GET("/name/:creatorName", image.GetImageByCreatorName)
+
+    challengeGroup := v1.Group("/challenge")
+	challengeGroup.GET("", challenge.GetAllChallenges)
+    challengeGroup.GET("/:corId", challenge.GetChallengeByCorID)
+    challengeGroup.GET("/name/:creatorName", challenge.GetChallengeByCreatorName)
+
+    processGroup := v1.Group("/process")
+	processGroup.GET("", process.GetAllProcesses)
+    processGroup.GET("/:corId", process.GetProcessByCorID)
+    processGroup.GET("/name/:creatorName", process.GetProcessByCreatorName)
+    processGroup.GET("/image/:imageName", process.GetProcessByImageName)
 
 	router.Run(":" + PORT)
 }
