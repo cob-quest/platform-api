@@ -10,7 +10,7 @@ import (
 
 func InitRoutes() {
 
-	challenge := new(controllers.ChallengeBuilderController)
+	challenge := new(controllers.ChallengeController)
 	image := new(controllers.ImageController)
 	process := new(controllers.ProcessController)
 

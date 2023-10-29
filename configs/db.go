@@ -60,7 +60,7 @@ func InitIndexes(client *mongo.Client) {
 		log.Fatal(err)
 	}
 
-	challengeCollection := OpenCollection(client, "challenge_builder")
+	challengeCollection := OpenCollection(client, "challenge")
 	challengeIndexModel := mongo.IndexModel{
 		Keys:    bson.D{{Key: "corId", Value: 1}},
 		Options: options.Index().SetUnique(true),
