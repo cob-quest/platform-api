@@ -17,6 +17,7 @@ type ProcessController struct{}
 
 var processCollection *mongo.Collection = configs.OpenCollection(configs.Client, "process_engine")
 
+// Get all the processes from the process engine
 func (t ProcessController) GetAllProcesses(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -26,14 +27,18 @@ func (t ProcessController) GetAllProcesses(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-
 	defer cursor.Close(ctx)
 
+	// retrieve the process
 	var process []models.Process
 	err = cursor.All(ctx, &process)
-
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve images"})
+		handleError(
+			c,
+			http.StatusInternalServerError,
+			"Failed to retrieve processes",
+			err,
+		)
 		return
 	}
 
@@ -113,9 +118,9 @@ func (t ProcessController) GetProcessByImageName(c *gin.Context) {
 	defer cancel()
 
 	filter := bson.D{
-        {Key: "imageName", Value: imageName},
-        {Key: "$text", Value: bson.D{{Key:"$search", Value: "image"}}},
-    }
+		{Key: "imageName", Value: imageName},
+		//{Key: "$text", Value: bson.D{{Key: "$search", Value: "image"}}},
+	}
 	cursor, err := processCollection.Find(ctx, filter)
 	if err != nil {
 		panic(err)
