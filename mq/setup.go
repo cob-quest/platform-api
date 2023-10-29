@@ -15,6 +15,7 @@ var (
 const (
 	ROUTE_IMAGE_BUILD      = "trigger.fromService.imageBuild"
 	ROUTE_CHALLENGE_CREATE = "trigger.fromService.challengeCreate"
+	ROUTE_CHALLENGE_START  = "trigger.fromService.challengeStart"
 	QUEUE_TRIGGER_FROM     = "queue.trigger.fromService"
 	EXCHANGE_TOPIC_TRIGGER = "topic.trigger"
 	EXCHANGE_DEFAULT       = "/"

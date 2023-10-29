@@ -161,9 +161,6 @@ type CreateChallengeMessage struct {
 // Creates a new challenge
 func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
-	// generate uuid
-	corId := uuid.New().String()
-
 	// create image message
 	var req CreateChallengeMessage
 
@@ -234,6 +231,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 	}
 
 	// set uuid
+	corId := uuid.New().String()
 	req.CorID = corId
 
 	// marshall data

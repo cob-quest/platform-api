@@ -13,6 +13,7 @@ func InitRoutes() {
 	challenge := new(controllers.ChallengeController)
 	image := new(controllers.ImageController)
 	process := new(controllers.ProcessController)
+	attempt := new(controllers.AttemptController)
 
 	router := gin.Default()
 
@@ -51,8 +52,14 @@ func InitRoutes() {
 	triggerImage := trigger.Group("/image")
 	triggerImage.POST("", image.UploadImage)
 
+	// challenge
 	triggerChallenge := trigger.Group("/challenge")
 	triggerChallenge.POST("", challenge.CreateChallenge)
+
+	// start challenge
+	triggerStartChallenge := trigger.Group("/startchallenge")
+	triggerStartChallenge.GET("", attempt.GetAttempt)
+	triggerStartChallenge.POST("", attempt.StartAttempt)
 
 	router.Run(":" + configs.PORT)
 }
