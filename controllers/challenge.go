@@ -2,12 +2,16 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"platform_api/configs"
 	"platform_api/models"
+	"platform_api/mq"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -68,7 +72,6 @@ func (t ChallengeBuilderController) GetChallengeByCorID(c *gin.Context) {
 	c.JSON(http.StatusOK, challenges)
 }
 
-// @Summary: Get a image by creatorName
 func (t ChallengeBuilderController) GetChallengeByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
 	if creatorName == "" {
@@ -101,4 +104,59 @@ func (t ChallengeBuilderController) GetChallengeByCreatorName(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, challenge)
+}
+
+// POST Handler Body
+type CreateChallengeMessage struct {
+	CorID        string   `json:"corId"`
+	ImageName    string   `json:"imageName" validate:"required"`
+	CreatorName  string   `json:"creatorName" validate:"required"`
+	Duration     int      `json:"duration" validate:"required"`
+	Participants []string `json:"participants" validate:"required"`
+}
+
+// POST Handler to create a challenge
+func (t ChallengeBuilderController) CreateChallenge(c *gin.Context) {
+
+	// generate uuid
+	corId := uuid.New().String()
+
+	// create image message
+	var req CreateChallengeMessage
+
+	err := json.NewDecoder(c.Request.Body).Decode(&req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to parse JSON request body"})
+		return
+	}
+
+	// validate json before passing to mq
+	v := validator.New()
+	err = v.Struct(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to validate json"})
+		return
+	}
+
+	// set uuid
+	req.CorID = corId
+
+	// marshall data
+	jsonReq, err := json.Marshal(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to marshall json"})
+		return
+	}
+
+	// publish to mq
+	err = mq.Pub(mq.EXCHANGE_TOPIC_TRIGGER, mq.ROUTE_CHALLENGE_CREATE, jsonReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to publish message"})
+		return
+	}
+
+	// response
+	resp := map[string]interface{}{"corId": corId}
+	c.JSON(http.StatusOK, resp)
+
 }

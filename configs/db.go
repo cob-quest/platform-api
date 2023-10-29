@@ -14,12 +14,12 @@ import (
 var Client *mongo.Client = ConnectDB()
 
 func ConnectDB() (client *mongo.Client) {
-	fmt.Printf("Attempting connection with %s\n", EnvMongoUri())
+	fmt.Printf("Attempting connection with %s\n", GetMongoURI())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(EnvMongoUri()))
+	client, err := mongo.NewClient(options.Client().ApplyURI(GetMongoURI()))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
@@ -79,13 +79,13 @@ func InitIndexes(client *mongo.Client) {
 		Options: options.Index().SetUnique(true),
 	}
 
-    processEventTextModel := mongo.IndexModel{
-        Keys: bson.D{
-            {Key: "event", Value: "text"},
-        },
-    }
+	processEventTextModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "event", Value: "text"},
+		},
+	}
 
-    processIndexes := []mongo.IndexModel{processUniqueIndex, processEventTextModel}
+	processIndexes := []mongo.IndexModel{processUniqueIndex, processEventTextModel}
 
 	processIndexCreated, err := processCollection.Indexes().CreateMany(context.Background(), processIndexes)
 	if err != nil {

@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"os"
+	"platform_api/configs"
 	"platform_api/controllers"
 
 	"github.com/gin-contrib/cors"
@@ -9,7 +9,6 @@ import (
 )
 
 func InitRoutes() {
-	PORT := os.Getenv("SERVER_PORT")
 
 	challenge := new(controllers.ChallengeBuilderController)
 	image := new(controllers.ImageController)
@@ -26,23 +25,34 @@ func InitRoutes() {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 
-    v1 := router.Group("/api/v1/platform")
+	v1 := router.Group("/api/v1")
 
-    imageGroup := v1.Group("/image")
-	imageGroup.GET("", image.GetAllImages)
-    imageGroup.GET("/:corId", image.GetImageByCorId)
-    imageGroup.GET("/name/:creatorName", image.GetImageByCreatorName)
+	// platform api
+	platform := v1.Group("/platform")
 
-    challengeGroup := v1.Group("/challenge")
-	challengeGroup.GET("", challenge.GetAllChallenges)
-    challengeGroup.GET("/:corId", challenge.GetChallengeByCorID)
-    challengeGroup.GET("/name/:creatorName", challenge.GetChallengeByCreatorName)
+	platformImage := platform.Group("/image")
+	platformImage.GET("", image.GetAllImages)
+	platformImage.GET("/:corId", image.GetImageByCorId)
+	platformImage.GET("/name/:creatorName", image.GetImageByCreatorName)
 
-    processGroup := v1.Group("/process")
-	processGroup.GET("", process.GetAllProcesses)
-    processGroup.GET("/:corId", process.GetProcessByCorID)
-    processGroup.GET("/name/:creatorName", process.GetProcessByCreatorName)
-    processGroup.GET("/image/:imageName", process.GetProcessByImageName)
+	platformChallenge := platform.Group("/challenge")
+	platformChallenge.GET("", challenge.GetAllChallenges)
+	platformChallenge.GET("/:corId", challenge.GetChallengeByCorID)
+	platformChallenge.GET("/name/:creatorName", challenge.GetChallengeByCreatorName)
 
-	router.Run(":" + PORT)
+	platformProcess := platform.Group("/process")
+	platformProcess.GET("", process.GetAllProcesses)
+	platformProcess.GET("/:corId", process.GetProcessByCorID)
+	platformProcess.GET("/name/:creatorName", process.GetProcessByCreatorName)
+	platformProcess.GET("/image/:imageName", process.GetProcessByImageName)
+
+	// trigger api
+	trigger := v1.Group("/trigger")
+	triggerImage := trigger.Group("/image")
+	triggerImage.POST("", image.UploadImage)
+
+	triggerChallenge := trigger.Group("/challenge")
+	triggerChallenge.POST("", challenge.CreateChallenge)
+
+	router.Run(":" + configs.PORT)
 }
