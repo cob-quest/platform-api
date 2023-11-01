@@ -13,11 +13,11 @@ var (
 )
 
 const (
-	ROUTE_IMAGE_BUILD      = "trigger.fromService.imageBuild"
-	ROUTE_CHALLENGE_CREATE = "trigger.fromService.challengeCreate"
-	ROUTE_CHALLENGE_START  = "trigger.fromService.challengeStart"
-	QUEUE_TRIGGER_FROM     = "queue.trigger.fromService"
-	EXCHANGE_TOPIC_TRIGGER = "topic.trigger"
+	ROUTE_IMAGE_BUILD      = "platform.fromService.imageBuild"
+	ROUTE_CHALLENGE_CREATE = "platform.fromService.challengeCreate"
+	ROUTE_CHALLENGE_START  = "platform.fromService.challengeStart"
+	QUEUE_PLATFORM_FROM     = "queue.platform.fromService"
+	EXCHANGE_TOPIC_ROUTER = "topic.router"
 	EXCHANGE_DEFAULT       = "/"
 )
 
@@ -65,7 +65,7 @@ func Init() {
 // Declares an exchange to Pub/Sub to
 func ExchangeDeclare(ch *amqp.Channel) error {
 	return ch.ExchangeDeclare(
-		EXCHANGE_TOPIC_TRIGGER, // name
+		EXCHANGE_TOPIC_ROUTER, // name
 		"topic",                // type
 		true,                   // durable
 		false,                  // auto-deleted
@@ -78,7 +78,7 @@ func ExchangeDeclare(ch *amqp.Channel) error {
 // Declares a queue to Pub/Sub to
 func QueueDeclare(ch *amqp.Channel) (amqp.Queue, error) {
 	return ch.QueueDeclare(
-		QUEUE_TRIGGER_FROM, // name
+		QUEUE_PLATFORM_FROM, // name
 		true,               // durable
 		false,              // delete when unused
 		false,              // exclusive

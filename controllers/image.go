@@ -171,7 +171,7 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	}
 
 	// publish to mq
-	err = mq.Pub(mq.EXCHANGE_TOPIC_TRIGGER, mq.ROUTE_IMAGE_BUILD, jsonReq)
+	err = mq.Pub(mq.EXCHANGE_TOPIC_ROUTER, mq.ROUTE_IMAGE_BUILD, jsonReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to format request"})
 		return

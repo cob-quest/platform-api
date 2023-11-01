@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"platform_api/configs"
@@ -10,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -111,44 +109,27 @@ func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
 }
 
 func (t ProcessController) GetProcessStatusByCorId(c *gin.Context) {
-    type Status struct {
-        CorId       string    `json:"corId" validate:"required"`
-    }
-
-    var req Status
-    err := json.NewDecoder(c.Request.Body).Decode(&req)
-	if err != nil {
+    corId := c.Param("corId")
+	if corId == "" {
 		handleError(
 			c,
-			http.StatusBadRequest,
-			"Invalid request body json",
-			err,
+			http.StatusInternalServerError,
+			"Invalid corId",
+			errors.New("corId cannot be empty"),
 		)
 		return
 	}
-
-    v := validator.New()
-    err = v.Struct(req)
-    if err != nil {
-        handleError(
-            c,
-            http.StatusBadRequest,
-            "Invalid request body",
-            err,
-        )
-        return
-    }
 
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
     var process models.Process
     filter := bson.D{
-        {Key: "corId", Value: req.CorId},
+        {Key: "corId", Value: corId},
     }
 
     options := options.FindOne().SetSort(bson.D{{Key: "timestamp", Value: -1}})
-    err = processCollection.FindOne(ctx, filter, options).Decode(&process)
+    err := processCollection.FindOne(ctx, filter, options).Decode(&process)
 	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
 		handleError(
 			c,

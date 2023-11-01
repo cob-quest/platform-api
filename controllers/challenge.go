@@ -247,7 +247,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 	}
 
 	// publish to mq
-	err = mq.Pub(mq.EXCHANGE_TOPIC_TRIGGER, mq.ROUTE_CHALLENGE_CREATE, jsonReq)
+	err = mq.Pub(mq.EXCHANGE_TOPIC_ROUTER, mq.ROUTE_CHALLENGE_CREATE, jsonReq)
 	if err != nil {
 		handleError(
 			c,
