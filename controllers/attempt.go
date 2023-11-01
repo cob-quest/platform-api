@@ -28,6 +28,7 @@ type AttemptBody struct {
 	Participant       string `json:"participant" bson:"participant"`
 	ImageRegistryLink string `json:"imageRegistryLink" bson:"imageRegistryLink"`
 	CorId             string `json:"corId"`
+	EventStatus       string `json:"eventStatus"`
 }
 
 var attemptCollection *mongo.Collection = configs.OpenCollection(configs.Client, "attempt")
@@ -137,7 +138,7 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 	req.CorId = uuid.NewString()
 
 	// marshall data for queue
-	data,err := json.Marshal(attemptSingle)
+	data, err := json.Marshal(attemptSingle)
 	if err != nil {
 		handleError(
 			c,
@@ -158,6 +159,9 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 		)
 		return
 	}
+
+	// set eventStatus
+	req.EventStatus = "challengeStarting"
 
 	jsonReq, err := json.Marshal(req)
 	if err != nil {

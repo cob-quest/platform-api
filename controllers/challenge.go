@@ -152,16 +152,18 @@ func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 type CreateChallengeMessage struct {
 	CorID         string   `json:"corId"`
 	ImageName     string   `json:"imageName" validate:"required"`
+	ImageTag      string   `json:"imageTag" validate:"required"`
 	ChallengeName string   `json:"challengeName" validate:"required"`
 	CreatorName   string   `json:"creatorName" validate:"required"`
 	Duration      int      `json:"duration" validate:"required"`
 	Participants  []string `json:"participants" validate:"required"`
+	EventStatus   string   `json:"eventStatus"`
 }
 
 // Creates a new challenge
 func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
-	// create image message
+	// create createChallenge message
 	var req CreateChallengeMessage
 
 	// parse the result
@@ -195,7 +197,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
 	// check if the image name exists
 	var image models.Image
-	filter := bson.D{{Key: "imageName", Value: req.ImageName}}
+	filter := bson.D{{Key: "imageName", Value: req.ImageName}, {Key: "creatorName", Value: req.CreatorName}, {Key: "imageTag", Value: req.ImageTag}}
 	err = imageCollection.FindOne(ctx, filter).Decode(&image)
 	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
 		handleError(
@@ -217,7 +219,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
 	// check if the challenge name already exists
 	var challenge models.Challenge
-	filter = bson.D{{Key: "challengeName", Value: req.ChallengeName}}
+	filter = bson.D{{Key: "challengeName", Value: req.ChallengeName}, {Key: "creatorName", Value: req.CreatorName}}
 	err = challengeCollection.FindOne(ctx, filter).Decode(&challenge)
 	// for the image to be valid, its name must not exist already
 	if !(err != nil && errors.Is(err, mongo.ErrNoDocuments)) {
@@ -233,6 +235,9 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 	// set uuid
 	corId := uuid.New().String()
 	req.CorID = corId
+
+	// set eventStatus
+	req.EventStatus = "challengeCreating"
 
 	// marshall data
 	jsonReq, err := json.Marshal(req)

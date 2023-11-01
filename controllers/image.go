@@ -113,12 +113,47 @@ func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 type UploadImageMessage struct {
 	ImageName   string `json:"imageName" validate:"required"`
 	CreatorName string `json:"creatorName" validate:"required"`
+	ImageTag    string `json:"imageTag" validate:"required"`
 	S3Path      string `json:"s3Path" validate:"required"`
 	CorID       string `json:"corId" validate:"required"`
+	EventStatus string `json:"eventStatus" validate:"required"`
 }
 
 // POST Handler to upload a image zip file
 func (t ImageController) UploadImage(c *gin.Context) {
+
+	// create uploadImage message
+	var req UploadImageMessage
+
+
+	// parse the result
+	if c.PostForm("imageName") == "" || c.PostForm("creatorName") == "" || c.PostForm("imageTag") == "" {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Missing imageName, creatorName or imageTag"})
+		return
+	}
+
+	// assign to Message
+	req.ImageName = c.PostForm("imageName")
+	req.ImageTag = c.PostForm("imageTag")
+	req.CreatorName= c.PostForm("creatorName")
+
+
+	// ctx for 10s
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// check if such imagename+tag exists under this creator, if exists return it exists
+	var image models.Image
+	filter := bson.D{{Key: "imageName", Value: req.ImageName}, {Key: "creatorName", Value: req.CreatorName}, {Key: "imageTag", Value: req.ImageTag}}
+	
+	err := imageCollection.FindOne(ctx, filter).Decode(&image)
+	if err == nil {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "ImageName and imageTag exists"})
+		return
+	} 
+
+	
+
 	// get the formFile
 	formFile, err := c.FormFile("imageFile")
 	if err != nil {
@@ -141,10 +176,6 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	log.Printf("Received values: %s, %s, %s and generated %s", imageName, creatorName, fileName, corId)
 
 	// create image message
-	req := UploadImageMessage{}
-	req.ImageName = imageName
-	req.CreatorName = creatorName
-	req.CorID = corId
 	req.S3Path = fmt.Sprintf("%s/%s-%s.zip", "challenge-zips", creatorName, corId)
 
 	// upload file to s3 compatible object store
@@ -162,6 +193,9 @@ func (t ImageController) UploadImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to validate form"})
 		return
 	}
+
+	// set eventStatus
+	req.EventStatus = "imageCreating"
 
 	// marshall data
 	jsonReq, err := json.Marshal(req)

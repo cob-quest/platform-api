@@ -53,7 +53,7 @@ func InitRoutes() {
 	platformAttempt := platform.Group("/attempt")
 	platformAttempt.POST("", attempt.StartAttempt)
 	platformAttempt.GET("/status/:corId", process.GetProcessStatusByCorId)
-	platformAttempt.GET(":token", attempt.GetOneAttemptByToken)
+	platformAttempt.GET("/:token", attempt.GetOneAttemptByToken)
 
 	// // trigger api
 	// trigger := v1.Group("/trigger")
