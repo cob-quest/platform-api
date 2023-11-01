@@ -48,46 +48,63 @@ func ConnectDB() (client *mongo.Client) {
 }
 
 func InitIndexes(client *mongo.Client) {
+    // Index for `image_builder` collection
 	imageCollection := OpenCollection(client, "image_builder")
-	imageIndexModel := mongo.IndexModel{
-		Keys: bson.D{
+    imageCorIdIndexModel := mongo.IndexModel{
+        Keys: bson.D{
 			{Key: "corId", Value: 1},
+        },
+        Options: options.Index().SetUnique(true),
+    }
+	imageCompositeIndexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "creatorName", Value: 1},
+			{Key: "imageName", Value: 1},
+			{Key: "imageTag", Value: 1},
 		},
 		Options: options.Index().SetUnique(true),
 	}
-	imageIndexCreated, err := imageCollection.Indexes().CreateOne(context.Background(), imageIndexModel)
+    imageIndexModels := []mongo.IndexModel{imageCorIdIndexModel, imageCompositeIndexModel}
+	imageIndexCreated, err := imageCollection.Indexes().CreateMany(context.Background(), imageIndexModels)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+    // Index for `challenge` collection
 	challengeCollection := OpenCollection(client, "challenge")
-	challengeIndexModel := mongo.IndexModel{
-		Keys:    bson.D{{Key: "corId", Value: 1}},
+	challengeCorIdIndexModel := mongo.IndexModel{
+		Keys:    bson.D{
+            {Key: "corId", Value: 1},
+        },
 		Options: options.Index().SetUnique(true),
 	}
-	challengeIndexCreated, err := challengeCollection.Indexes().CreateOne(context.Background(), challengeIndexModel)
+
+	challengeCompositeIndexModel := mongo.IndexModel{
+		Keys:    bson.D{
+            {Key: "challengeName", Value: 1},
+            {Key: "creatorName", Value: 1},
+        },
+		Options: options.Index().SetUnique(true),
+	}
+
+    challengeIndexModels := []mongo.IndexModel{challengeCorIdIndexModel, challengeCompositeIndexModel}
+	challengeIndexCreated, err := challengeCollection.Indexes().CreateMany(context.Background(), challengeIndexModels)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+    // Index for `process_engine` collection
 	processCollection := OpenCollection(client, "process_engine")
 
 	processUniqueIndex := mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "corId", Value: 1},
+            {Key: "timestamp", Value: 1},
 		},
 		Options: options.Index().SetUnique(true),
 	}
 
-	processEventTextModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: "event", Value: "text"},
-		},
-	}
-
-	processIndexes := []mongo.IndexModel{processUniqueIndex, processEventTextModel}
-
-	processIndexCreated, err := processCollection.Indexes().CreateMany(context.Background(), processIndexes)
+	processIndexCreated, err := processCollection.Indexes().CreateOne(context.Background(), processUniqueIndex)
 	if err != nil {
 		log.Fatal(err)
 	}

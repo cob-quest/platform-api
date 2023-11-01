@@ -48,6 +48,7 @@ func GetMongoURI() string {
 	MONGO_USER := os.Getenv("MONGODB_USERNAME")
 	MONGO_PASS := os.Getenv("MONGODB_PASSWORD")
 	MONGO_HOSTNAME := os.Getenv("MONGODB_HOSTNAME")
+    MONGO_URI := os.Getenv("MONGO_URI")
 	if MONGO_URI == "" {
 		MONGO_URI = fmt.Sprintf("mongodb://%s:%s@%s:%s", MONGO_USER, MONGO_PASS, MONGO_HOSTNAME, "27017")
 	}

@@ -2,12 +2,15 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"platform_api/configs"
 	"platform_api/models"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -107,39 +110,61 @@ func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
 	c.JSON(http.StatusOK, process)
 }
 
-func (t ProcessController) GetProcessByImageName(c *gin.Context) {
-	imageName := c.Param("imageName")
-	if imageName == "" {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "imageName cannot be empty"})
-		return
-	}
+func (t ProcessController) GetProcessStatusByCorId(c *gin.Context) {
+    type Status struct {
+        CorId       string    `json:"corId" validate:"required"`
+    }
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	filter := bson.D{
-		{Key: "imageName", Value: imageName},
-		//{Key: "$text", Value: bson.D{{Key: "$search", Value: "image"}}},
-	}
-	cursor, err := processCollection.Find(ctx, filter)
+    var req Status
+    err := json.NewDecoder(c.Request.Body).Decode(&req)
 	if err != nil {
-		panic(err)
-	}
-
-	defer cursor.Close(ctx)
-
-	var process []models.Process
-	err = cursor.All(ctx, &process)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve processes. " + err.Error()})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Invalid request body json",
+			err,
+		)
 		return
 	}
 
-	if len(process) == 0 {
-		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No image process found with imageName"})
+    v := validator.New()
+    err = v.Struct(req)
+    if err != nil {
+        handleError(
+            c,
+            http.StatusBadRequest,
+            "Invalid request body",
+            err,
+        )
+        return
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    var process models.Process
+    filter := bson.D{
+        {Key: "corId", Value: req.CorId},
+    }
+
+    options := options.FindOne().SetSort(bson.D{{Key: "timestamp", Value: -1}})
+    err = processCollection.FindOne(ctx, filter, options).Decode(&process)
+	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
+		handleError(
+			c,
+			http.StatusNotFound,
+			"Invalid CorId given",
+			err,
+		)
+		return
+	} else if err != nil {
+		handleError(
+			c,
+			http.StatusInternalServerError,
+			"Error",
+			err,
+		)
 		return
 	}
-
-	c.JSON(http.StatusOK, process)
+    c.JSON(http.StatusOK, process)
 }

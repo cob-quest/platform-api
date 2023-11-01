@@ -1,25 +1,17 @@
 package models
 
-import (
-	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Process struct {
-	_Id          primitive.ObjectID `json:"_id" bson:"_id"`
-	CorId        string             `json:"corId" bson:"corId"`
-	CreatorName  string             `json:"creatorName" bson:"creatorName"`
-	Event        string             `json:"event" bson:"event"`
-	EventSuccess bool               `json:"eventSuccess" bson:"eventSuccess"`
-	Timestamp    time.Time          `json:"timestamp" bson:"timestamp"`
-	ImageName    string             `json:"imageName" bson:"imageName"`
-	S3Path       string             `json:"s3Path,omitempty" bson:"s3Path,omitempty"`
-	Duration     int                `json:"duration,omitempty" bson:"duration,omitempty"`
-	Participants []string           `json:"participants,omitempty" bson:"participants,omitempty"`
-	AssignmentId string             `json:"assignmentId,omitempty" bson:"assignmentId,omitempty"`
-}
-
-type ProcessList struct {
-	Processes []Process `json:"processes" bson:",inline"`
+	_Id             primitive.ObjectID `json:"_id" bson:"_id"`
+	CorId           string             `json:"corId" bson:"corId"`
+	Timestamp       string             `json:"timestamp" bson:"timestamp"`
+	CreatorName     string             `json:"creatorName,omitempty" bson:"creatorName,omitempty"`
+	ChallengeName   string             `json:"challengeName,omitempty" bson:"challengeName,omitempty"`
+	ImageName       string             `json:"imageName,omitempty" bson:"imageName,omitempty"`
+	ImageTag        string             `json:"imageTag,omitempty" bson:"imageTag,omitempty"`
+	Participant     string             `json:"participant,omitempty" bson:"participant,omitempty"`
+	Participants    []string           `json:"participants" bson:"participants"`
+	Event           string             `json:"event" bson:"event"`
+	EventSuccess    string             `json:"eventSuccess" bson:"eventSuccess"`
 }

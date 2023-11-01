@@ -35,17 +35,21 @@ func InitRoutes() {
 	platformImage.GET("", image.GetAllImages)
 	platformImage.GET("/:corId", image.GetImageByCorId)
 	platformImage.GET("/name/:creatorName", image.GetImageByCreatorName)
+	platformImage.GET("/status", process.GetProcessStatusByCorId)
 
 	platformChallenge := platform.Group("/challenge")
 	platformChallenge.GET("", challenge.GetAllChallenges)
 	platformChallenge.GET("/:corId", challenge.GetChallengeByCorID)
 	platformChallenge.GET("/name/:creatorName", challenge.GetChallengeByCreatorName)
+	platformChallenge.GET("/status", process.GetProcessStatusByCorId)
 
 	platformProcess := platform.Group("/process")
 	platformProcess.GET("", process.GetAllProcesses)
 	platformProcess.GET("/:corId", process.GetProcessByCorID)
 	platformProcess.GET("/name/:creatorName", process.GetProcessByCreatorName)
-	platformProcess.GET("/image/:imageName", process.GetProcessByImageName)
+
+    platformAttempt := platform.Group("/attempt")
+    platformAttempt.GET("/status", process.GetProcessStatusByCorId)
 
 	// trigger api
 	trigger := v1.Group("/trigger")
