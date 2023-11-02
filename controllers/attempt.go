@@ -191,3 +191,68 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 		gin.H{"corId": req.CorId},
 	)
 }
+
+// POST Handler Body
+type AttemptSubmitBody struct {
+	Token string `json:"token" validate:"required"`
+	Result float64 `json:"result" validate:"required"`
+}
+
+func (t AttemptController) SubmitAttemptByToken(c *gin.Context) {
+	var req AttemptSubmitBody
+	err := json.NewDecoder(c.Request.Body).Decode(&req)
+	if err != nil {
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Invalid request body json",
+			err,
+		)
+		return
+	}
+
+	// validate json
+	v := validator.New()
+	err = v.Struct(req)
+	if err != nil {
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Invalid request body",
+			err,
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "token", Value: req.Token}}
+
+	// Create an update document to update the value of the object.
+	var attempt models.Attempt
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "result", Value: req.Result}}}}
+	err = attemptCollection.FindOneAndUpdate(ctx, filter, update).Decode(&attempt)
+
+	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Invalid token",
+			err,
+		)
+		return
+	} else if err != nil {
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Invalid Token",
+			err,
+		)
+		return
+	}
+
+	c.JSON(
+		http.StatusOK,
+		gin.H{"submitted": true},
+	)
+}
