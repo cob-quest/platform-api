@@ -30,3 +30,4 @@ To get the docker image for the project, you can build it locally:
 # build with the dev file
 docker build -t <image> -f ./docker/Dockerfile.dev .
 ```
+
