@@ -19,7 +19,9 @@ import (
 
 type AttemptController struct{}
 
-// POST Handler Body
+// AttemptBody is the request body for an attempt
+// @Description AttemptBody is used to validate the request body for starting or getting an attempt.
+// @Name AttemptBody
 type AttemptBody struct {
 	Token string `json:"token" validate:"required"`
 	Email string `json:"email" validate:"required"`
@@ -28,6 +30,15 @@ type AttemptBody struct {
 
 var attemptCollection *mongo.Collection = configs.OpenCollection(configs.Client, "attempt")
 
+// @Summary Get attempt information
+// @Description Retrieve information about a specific attempt
+// @Tags attempt
+// @Accept json
+// @Produce json
+// @Param body body AttemptBody true "AttemptBody"
+// @Success 200 {object} AttemptModel
+// @Failure 400 {object} ErrorResponse
+// @Router /startchallenge [get]
 func (t AttemptController) GetAttempt(c *gin.Context) {
 	var req AttemptBody
 	err := json.NewDecoder(c.Request.Body).Decode(&req)
@@ -86,7 +97,15 @@ func (t AttemptController) GetAttempt(c *gin.Context) {
 	c.JSON(http.StatusOK, attemptSingle)
 }
 
-// Starts a challenge
+// @Summary Start a new challenge attempt
+// @Description Begin a new attempt for a challenge
+// @Tags attempt
+// @Accept json
+// @Produce json
+// @Param body body AttemptBody true "AttemptBody"
+// @Success 200 {object} AttemptStartResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /startchallenge [post]
 func (t AttemptController) StartAttempt(c *gin.Context) {
 
 	// parse body
