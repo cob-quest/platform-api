@@ -24,6 +24,15 @@ type ImageController struct{}
 
 var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
 
+// GetAllImages godoc
+//	@Summary		Retrieve all images
+//	@Description	Get all image records from the database
+//	@Tags			images
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{array}		models.Image
+//	@Failure		500	{object}	models.HTTPError
+//	@Router			/images [get]
 func (t ImageController) GetAllImages(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -47,6 +56,17 @@ func (t ImageController) GetAllImages(c *gin.Context) {
 	c.JSON(http.StatusOK, images)
 }
 
+// GetImageByCorId godoc
+//	@Summary		Retrieve an image by Correlation ID
+//	@Description	Get a single image record by Correlation ID (corId)
+//	@Tags			images
+//	@Accept			json
+//	@Produce		json
+//	@Param			corId	path		string	true	"Correlation ID"
+//	@Success		200		{object}	models.Image
+//	@Failure		400		{object}	models.HTTPError
+//	@Failure		404		{object}	models.HTTPError
+//	@Router			/images/{corId} [get]
 func (t ImageController) GetImageByCorId(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
@@ -74,7 +94,17 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 	c.JSON(http.StatusOK, image)
 }
 
-// @Summary: Get a image by creatorName
+// GetImageByCreatorName godoc
+//	@Summary		Retrieve images by creator's name
+//	@Description	Get all image records from the database filtered by creator's name
+//	@Tags			images
+//	@Accept			json
+//	@Produce		json
+//	@Param			creatorName	path		string	true	"Creator's Name"
+//	@Success		200			{array}		models.Image
+//	@Failure		400			{object}	models.HTTPError
+//	@Failure		404			{object}	models.HTTPError
+//	@Router			/images/byCreator/{creatorName} [get]
 func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
 	if creatorName == "" {
@@ -113,12 +143,60 @@ func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 type UploadImageMessage struct {
 	ImageName   string `json:"imageName" validate:"required"`
 	CreatorName string `json:"creatorName" validate:"required"`
+	ImageTag    string `json:"imageTag" validate:"required"`
 	S3Path      string `json:"s3Path" validate:"required"`
 	CorID       string `json:"corId" validate:"required"`
+	EventStatus string `json:"eventStatus" validate:"required"`
 }
 
-// POST Handler to upload a image zip file
+// UploadImage godoc
+//	@Summary		Upload an image
+//	@Description	Upload an image file and trigger image creation process
+//	@Tags			images
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			imageName	formData	string					true	"Name of the Image"
+//	@Param			creatorName	formData	string					true	"Name of the Creator"
+//	@Param			imageTag	formData	string					true	"Tag of the Image"
+//	@Param			imageFile	formData	file					true	"The image file to upload"
+//	@Success		200			{object}	map[string]interface{}	"A map containing the correlation ID"
+//	@Failure		400			{object}	models.HTTPError
+//	@Failure		500			{object}	models.HTTPError
+//	@Router			/images/upload [post]
 func (t ImageController) UploadImage(c *gin.Context) {
+
+	// create uploadImage message
+	var req UploadImageMessage
+
+
+	// parse the result
+	if c.PostForm("imageName") == "" || c.PostForm("creatorName") == "" || c.PostForm("imageTag") == "" {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Missing imageName, creatorName or imageTag"})
+		return
+	}
+
+	// assign to Message
+	req.ImageName = c.PostForm("imageName")
+	req.ImageTag = c.PostForm("imageTag")
+	req.CreatorName= c.PostForm("creatorName")
+
+
+	// ctx for 10s
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// check if such imagename+tag exists under this creator, if exists return it exists
+	var image models.Image
+	filter := bson.D{{Key: "imageName", Value: req.ImageName}, {Key: "creatorName", Value: req.CreatorName}, {Key: "imageTag", Value: req.ImageTag}}
+	
+	err := imageCollection.FindOne(ctx, filter).Decode(&image)
+	if err == nil {
+		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "ImageName and imageTag exists"})
+		return
+	} 
+
+	
+
 	// get the formFile
 	formFile, err := c.FormFile("imageFile")
 	if err != nil {
@@ -141,10 +219,6 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	log.Printf("Received values: %s, %s, %s and generated %s", imageName, creatorName, fileName, corId)
 
 	// create image message
-	req := UploadImageMessage{}
-	req.ImageName = imageName
-	req.CreatorName = creatorName
-	req.CorID = corId
 	req.S3Path = fmt.Sprintf("%s/%s-%s.zip", "challenge-zips", creatorName, corId)
 
 	// upload file to s3 compatible object store
@@ -163,6 +237,9 @@ func (t ImageController) UploadImage(c *gin.Context) {
 		return
 	}
 
+	// set eventStatus
+	req.EventStatus = "imageCreating"
+
 	// marshall data
 	jsonReq, err := json.Marshal(req)
 	if err != nil {
@@ -171,7 +248,7 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	}
 
 	// publish to mq
-	err = mq.Pub(mq.EXCHANGE_TOPIC_TRIGGER, mq.ROUTE_IMAGE_BUILD, jsonReq)
+	err = mq.Pub(mq.EXCHANGE_TOPIC_ROUTER, mq.ROUTE_IMAGE_BUILD, jsonReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to format request"})
 		return

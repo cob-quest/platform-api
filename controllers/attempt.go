@@ -20,47 +20,40 @@ import (
 type AttemptController struct{}
 
 // AttemptBody is the request body for an attempt
-// @Description AttemptBody is used to validate the request body for starting or getting an attempt.
-// @Name AttemptBody
+//	@Description	AttemptBody is used to validate the request body for starting or getting an attempt.
+//	@Name			AttemptBody
 type AttemptBody struct {
 	Token string `json:"token" validate:"required"`
-	Email string `json:"email" validate:"required"`
-	CorId string `json:"corId"`
+	// Email string `json:"email" validate:"required"`
+	ChallengeName     string `json:"challengeName" bson:"challengeName"`
+	CreatorName       string `json:"creatorName" bson:"creatorName"`
+	Participant       string `json:"participant" bson:"participant"`
+	ImageRegistryLink string `json:"imageRegistryLink" bson:"imageRegistryLink"`
+	CorId             string `json:"corId"`
+	EventStatus       string `json:"eventStatus"`
 }
 
 var attemptCollection *mongo.Collection = configs.OpenCollection(configs.Client, "attempt")
 
-// @Summary Get attempt information
-// @Description Retrieve information about a specific attempt
-// @Tags attempt
-// @Accept json
-// @Produce json
-// @Param body body AttemptBody true "AttemptBody"
-// @Success 200 {object} AttemptModel
-// @Failure 400 {object} ErrorResponse
-// @Router /startchallenge [get]
-func (t AttemptController) GetAttempt(c *gin.Context) {
-	var req AttemptBody
-	err := json.NewDecoder(c.Request.Body).Decode(&req)
-	if err != nil {
+// GetOneAttemptByToken finds and returns a challenge attempt by its token.
+//	@Summary		Retrieve attempt by token
+//	@Description	Get details of a specific attempt by token
+//	@Tags			attempt
+//	@Produce		json
+//	@Param			token	path		string			true	"Attempt Token"
+//	@Success		200		{object}	models.Attempt	"Successfully retrieved the attempt"
+//	@Failure		400		"Invalid token parameter"
+//	@Failure		404		"Attempt not found"
+//	@Failure		500		"Internal server error"
+//	@Router			/platform/attempt/{token} [get]
+func (t AttemptController) GetOneAttemptByToken(c *gin.Context) {
+	token := c.Param("token")
+	if token == "" {
 		handleError(
 			c,
-			http.StatusBadRequest,
-			"Invalid request body json",
-			err,
-		)
-		return
-	}
-
-	// validate json
-	v := validator.New()
-	err = v.Struct(req)
-	if err != nil {
-		handleError(
-			c,
-			http.StatusBadRequest,
-			"Invalid request body",
-			err,
+			http.StatusInternalServerError,
+			"Invalid token",
+			errors.New("token cannot be empty"),
 		)
 		return
 	}
@@ -72,10 +65,10 @@ func (t AttemptController) GetAttempt(c *gin.Context) {
 	// find the challenge with the specified ID
 	var attemptSingle models.Attempt
 	filter := bson.D{
-		{Key: "token", Value: req.Token},
-		{Key: "email", Value: req.Email},
+		{Key: "token", Value: token},
+		// {Key: "email", Value: req.Email},
 	}
-	err = attemptCollection.FindOne(ctx, filter).Decode(&attemptSingle)
+	err := attemptCollection.FindOne(ctx, filter).Decode(&attemptSingle)
 	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
 		handleError(
 			c,
@@ -97,15 +90,17 @@ func (t AttemptController) GetAttempt(c *gin.Context) {
 	c.JSON(http.StatusOK, attemptSingle)
 }
 
-// @Summary Start a new challenge attempt
-// @Description Begin a new attempt for a challenge
-// @Tags attempt
-// @Accept json
-// @Produce json
-// @Param body body AttemptBody true "AttemptBody"
-// @Success 200 {object} AttemptStartResponse
-// @Failure 400 {object} ErrorResponse
-// @Router /startchallenge [post]
+// StartAttempt creates a new attempt for a challenge.
+//	@Summary		Start a new challenge attempt
+//	@Description	Begin a new attempt for a specified challenge
+//	@Tags			attempt
+//	@Accept			json
+//	@Produce		json
+//	@Param			AttemptBody	body		AttemptBody				true	"Start Attempt Request Body"
+//	@Success		200			{object}	models.SuccessResponse	"Successfully started the attempt with corId"
+//	@Failure		400			"Bad request when the body is not as per AttemptBody structure"
+//	@Failure		500			"Internal server error"
+//	@Router			/platform/attempt [post]
 func (t AttemptController) StartAttempt(c *gin.Context) {
 
 	// parse body
@@ -142,7 +137,7 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 	var attemptSingle models.Attempt
 	filter := bson.D{
 		{Key: "token", Value: req.Token},
-		{Key: "email", Value: req.Email},
+		// {Key: "email", Value: req.Email},
 	}
 	err = attemptCollection.FindOne(ctx, filter).Decode(&attemptSingle)
 	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
@@ -165,7 +160,32 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 
 	req.CorId = uuid.NewString()
 
-	// marshall data
+	// marshall data for queue
+	data, err := json.Marshal(attemptSingle)
+	if err != nil {
+		handleError(
+			c,
+			http.StatusInternalServerError,
+			"Failed to marshall attempt to JSON",
+			err,
+		)
+		return
+	}
+
+	err = json.Unmarshal(data, &req)
+	if err != nil {
+		handleError(
+			c,
+			http.StatusInternalServerError,
+			"Failed to unmarshall attempt JSON to attempt Body",
+			err,
+		)
+		return
+	}
+
+	// set eventStatus
+	req.EventStatus = "challengeStarting"
+
 	jsonReq, err := json.Marshal(req)
 	if err != nil {
 		handleError(
@@ -178,7 +198,7 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 	}
 
 	// publish to mq
-	err = mq.Pub(mq.EXCHANGE_TOPIC_TRIGGER, mq.ROUTE_CHALLENGE_START, jsonReq)
+	err = mq.Pub(mq.EXCHANGE_TOPIC_ROUTER, mq.ROUTE_CHALLENGE_START, jsonReq)
 	if err != nil {
 		handleError(
 			c,

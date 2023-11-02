@@ -10,7 +10,7 @@ type Attempt struct {
 	Token             string             `json:"token" bson:"token"`
 	ImageRegistryLink string             `json:"imageRegistryLink" bson:"imageRegistryLink"`
 	SSHkey            string             `json:"sshkey" bson:"sshkey"`
-	Result            string             `json:"result" bson:"result"`
+	Result            float64             `json:"result" bson:"result"`
 	IpAddress         string             `json:"ipaddress" bson:"ipaddress"`
 	Port              string             `json:"port" bson:"port"`
 }
