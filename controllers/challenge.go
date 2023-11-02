@@ -18,11 +18,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// ChallengeController is the controller for handling challenges.
 type ChallengeController struct{}
 
 var challengeCollection *mongo.Collection = configs.OpenCollection(configs.Client, "challenge")
 
-// Gets all the challenges in MongoDB
+//	@Summary		Get all challenges
+//	@Description	Retrieves a list of all challenges.
+//	@Tags			challenges
+//	@Produce		json
+//	@Success		200	{array}		models.Challenge
+//	@Failure		500	{object}	models.HTTPError	"Failed to retrieve challenges"
+//	@Router			/challenges [get]
 func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -50,7 +57,15 @@ func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 	c.JSON(http.StatusOK, challenges)
 }
 
-// Gets all Challenges by the given corId
+//	@Summary		Get challenge by CorID
+//	@Description	Retrieves a challenge based on its CorID.
+//	@Tags			challenges
+//	@Produce		json
+//	@Param			corId	path		string	true	"CorID of the Challenge"
+//	@Success		200		{object}	models.Challenge
+//	@Failure		400		{object}	models.HTTPError	"Invalid corId"
+//	@Failure		404		{object}	models.HTTPError	"No challenge found with given corId"
+//	@Router			/challenges/{corId} [get]
 func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
@@ -87,7 +102,15 @@ func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 	c.JSON(http.StatusOK, challenges)
 }
 
-// Gets Challenge by a Creator Name
+//	@Summary		Get challenge by creator name
+//	@Description	Retrieves a list of challenges based on the creator's name.
+//	@Tags			challenges
+//	@Produce		json
+//	@Param			creatorName	path		string	true	"Name of the Challenge Creator"
+//	@Success		200			{array}		models.Challenge
+//	@Failure		400			{object}	models.HTTPError	"Invalid creatorName"
+//	@Failure		404			{object}	models.HTTPError	"No challenges with creatorName found"
+//	@Router			/challenges/creator/{creatorName} [get]
 func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 
 	creatorName := c.Param("creatorName")
@@ -148,7 +171,7 @@ func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 	c.JSON(http.StatusOK, challenge)
 }
 
-// POST Handler Body
+// CreateChallengeMessage is the expected body content for creating a challenge.
 type CreateChallengeMessage struct {
 	CorID         string   `json:"corId"`
 	ImageName     string   `json:"imageName" validate:"required"`
@@ -160,7 +183,16 @@ type CreateChallengeMessage struct {
 	EventStatus   string   `json:"eventStatus"`
 }
 
-// Creates a new challenge
+//	@Summary		Create a new challenge
+//	@Description	Creates a new challenge with the provided details.
+//	@Tags			challenges
+//	@Accept			json
+//	@Produce		json
+//	@Param			challenge	body		CreateChallengeMessage	true	"Create Challenge Content"
+//	@Success		200			{object}	models.SuccessResponse
+//	@Failure		400			{object}	models.HTTPError	"Invalid request body"
+//	@Failure		500			{object}	models.HTTPError	"Failed to marshal JSON or Failed to publish message"
+//	@Router			/challenges [post]
 func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
 	// create createChallenge message

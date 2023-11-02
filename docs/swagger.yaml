@@ -1,4 +1,547 @@
+definitions:
+  controllers.AttemptBody:
+    description: AttemptBody is used to validate the request body for starting or
+      getting an attempt.
+    properties:
+      challengeName:
+        description: Email string `json:"email" validate:"required"`
+        type: string
+      corId:
+        type: string
+      creatorName:
+        type: string
+      eventStatus:
+        type: string
+      imageRegistryLink:
+        type: string
+      participant:
+        type: string
+      token:
+        type: string
+    required:
+    - token
+    type: object
+  controllers.CreateChallengeMessage:
+    properties:
+      challengeName:
+        type: string
+      corId:
+        type: string
+      creatorName:
+        type: string
+      duration:
+        type: integer
+      eventStatus:
+        type: string
+      imageName:
+        type: string
+      imageTag:
+        type: string
+      participants:
+        items:
+          type: string
+        type: array
+    required:
+    - challengeName
+    - creatorName
+    - duration
+    - imageName
+    - imageTag
+    - participants
+    type: object
+  models.Attempt:
+    properties:
+      challengeName:
+        type: string
+      creatorName:
+        type: string
+      imageRegistryLink:
+        type: string
+      ipaddress:
+        type: string
+      participant:
+        type: string
+      port:
+        type: string
+      result:
+        type: number
+      sshkey:
+        type: string
+      token:
+        type: string
+    type: object
+  models.Challenge:
+    properties:
+      challengeName:
+        type: string
+      corId:
+        type: string
+      creatorName:
+        type: string
+      duration:
+        type: integer
+      imageName:
+        type: string
+      imageRegistryLink:
+        type: string
+      imageTag:
+        type: string
+      participants:
+        items:
+          type: string
+        type: array
+    type: object
+  models.HTTPError:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  models.Image:
+    properties:
+      corId:
+        type: string
+      creatorName:
+        type: string
+      imageName:
+        type: string
+      imageRegistryLink:
+        type: string
+      imageTag:
+        type: string
+    type: object
+  models.Process:
+    properties:
+      challengeName:
+        type: string
+      corId:
+        type: string
+      creatorName:
+        type: string
+      event:
+        type: string
+      eventStatus:
+        type: string
+      imageName:
+        type: string
+      imageTag:
+        type: string
+      participant:
+        type: string
+      participants:
+        items:
+          type: string
+        type: array
+      timestamp:
+        additionalProperties: true
+        type: object
+    type: object
+  models.SuccessResponse:
+    properties:
+      corId:
+        description: CorId represents the correlation ID of the attempt.
+        type: string
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /challenges:
+    get:
+      description: Retrieves a list of all challenges.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Challenge'
+            type: array
+        "500":
+          description: Failed to retrieve challenges
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Get all challenges
+      tags:
+      - challenges
+    post:
+      consumes:
+      - application/json
+      description: Creates a new challenge with the provided details.
+      parameters:
+      - description: Create Challenge Content
+        in: body
+        name: challenge
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateChallengeMessage'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Failed to marshal JSON or Failed to publish message
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Create a new challenge
+      tags:
+      - challenges
+  /challenges/{corId}:
+    get:
+      description: Retrieves a challenge based on its CorID.
+      parameters:
+      - description: CorID of the Challenge
+        in: path
+        name: corId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Challenge'
+        "400":
+          description: Invalid corId
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: No challenge found with given corId
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Get challenge by CorID
+      tags:
+      - challenges
+  /challenges/creator/{creatorName}:
+    get:
+      description: Retrieves a list of challenges based on the creator's name.
+      parameters:
+      - description: Name of the Challenge Creator
+        in: path
+        name: creatorName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Challenge'
+            type: array
+        "400":
+          description: Invalid creatorName
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: No challenges with creatorName found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Get challenge by creator name
+      tags:
+      - challenges
+  /images:
+    get:
+      consumes:
+      - application/json
+      description: Get all image records from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Image'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Retrieve all images
+      tags:
+      - images
+  /images/{corId}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single image record by Correlation ID (corId)
+      parameters:
+      - description: Correlation ID
+        in: path
+        name: corId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Image'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Retrieve an image by Correlation ID
+      tags:
+      - images
+  /images/byCreator/{creatorName}:
+    get:
+      consumes:
+      - application/json
+      description: Get all image records from the database filtered by creator's name
+      parameters:
+      - description: Creator's Name
+        in: path
+        name: creatorName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Image'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Retrieve images by creator's name
+      tags:
+      - images
+  /images/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload an image file and trigger image creation process
+      parameters:
+      - description: Name of the Image
+        in: formData
+        name: imageName
+        required: true
+        type: string
+      - description: Name of the Creator
+        in: formData
+        name: creatorName
+        required: true
+        type: string
+      - description: Tag of the Image
+        in: formData
+        name: imageTag
+        required: true
+        type: string
+      - description: The image file to upload
+        in: formData
+        name: imageFile
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: A map containing the correlation ID
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Upload an image
+      tags:
+      - images
+  /platform/attempt:
+    post:
+      consumes:
+      - application/json
+      description: Begin a new attempt for a specified challenge
+      parameters:
+      - description: Start Attempt Request Body
+        in: body
+        name: AttemptBody
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.AttemptBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully started the attempt with corId
+          schema:
+            $ref: '#/definitions/models.SuccessResponse'
+        "400":
+          description: Bad request when the body is not as per AttemptBody structure
+        "500":
+          description: Internal server error
+      summary: Start a new challenge attempt
+      tags:
+      - attempt
+  /platform/attempt/{token}:
+    get:
+      description: Get details of a specific attempt by token
+      parameters:
+      - description: Attempt Token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved the attempt
+          schema:
+            $ref: '#/definitions/models.Attempt'
+        "400":
+          description: Invalid token parameter
+        "404":
+          description: Attempt not found
+        "500":
+          description: Internal server error
+      summary: Retrieve attempt by token
+      tags:
+      - attempt
+  /processes:
+    get:
+      consumes:
+      - application/json
+      description: Get all the processes from the process engine
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Process'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Retrieves all processes
+      tags:
+      - processes
+  /processes/{corId}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of processes by their Correlation ID
+      parameters:
+      - description: Correlation ID
+        in: path
+        name: corId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Process'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Retrieves a process by Correlation ID
+      tags:
+      - processes
+  /processes/byCreator/{creatorName}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of processes filtered by Creator Name
+      parameters:
+      - description: Creator's Name
+        in: path
+        name: creatorName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Process'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Retrieves processes by Creator Name
+      tags:
+      - processes
+  /processes/status/{corId}:
+    get:
+      consumes:
+      - application/json
+      description: Get the most recent status of a specific process by Correlation
+        ID
+      parameters:
+      - description: Correlation ID
+        in: path
+        name: corId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Process'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+      summary: Retrieves the status of a process by Correlation ID
+      tags:
+      - processes
 swagger: "2.0"

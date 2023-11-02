@@ -14,7 +14,825 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/challenges": {
+            "get": {
+                "description": "Retrieves a list of all challenges.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Get all challenges",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Challenge"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve challenges",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new challenge with the provided details.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Create a new challenge",
+                "parameters": [
+                    {
+                        "description": "Create Challenge Content",
+                        "name": "challenge",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.CreateChallengeMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to marshal JSON or Failed to publish message",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/creator/{creatorName}": {
+            "get": {
+                "description": "Retrieves a list of challenges based on the creator's name.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Get challenge by creator name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the Challenge Creator",
+                        "name": "creatorName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Challenge"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid creatorName",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "No challenges with creatorName found",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/challenges/{corId}": {
+            "get": {
+                "description": "Retrieves a challenge based on its CorID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "challenges"
+                ],
+                "summary": "Get challenge by CorID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CorID of the Challenge",
+                        "name": "corId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Challenge"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid corId",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "No challenge found with given corId",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/images": {
+            "get": {
+                "description": "Get all image records from the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Retrieve all images",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Image"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/images/byCreator/{creatorName}": {
+            "get": {
+                "description": "Get all image records from the database filtered by creator's name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Retrieve images by creator's name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Creator's Name",
+                        "name": "creatorName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Image"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/images/upload": {
+            "post": {
+                "description": "Upload an image file and trigger image creation process",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Upload an image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of the Image",
+                        "name": "imageName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Name of the Creator",
+                        "name": "creatorName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tag of the Image",
+                        "name": "imageTag",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "The image file to upload",
+                        "name": "imageFile",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A map containing the correlation ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/images/{corId}": {
+            "get": {
+                "description": "Get a single image record by Correlation ID (corId)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "Retrieve an image by Correlation ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Correlation ID",
+                        "name": "corId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Image"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/platform/attempt": {
+            "post": {
+                "description": "Begin a new attempt for a specified challenge",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "attempt"
+                ],
+                "summary": "Start a new challenge attempt",
+                "parameters": [
+                    {
+                        "description": "Start Attempt Request Body",
+                        "name": "AttemptBody",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.AttemptBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully started the attempt with corId",
+                        "schema": {
+                            "$ref": "#/definitions/models.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request when the body is not as per AttemptBody structure"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/platform/attempt/{token}": {
+            "get": {
+                "description": "Get details of a specific attempt by token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "attempt"
+                ],
+                "summary": "Retrieve attempt by token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Attempt Token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved the attempt",
+                        "schema": {
+                            "$ref": "#/definitions/models.Attempt"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid token parameter"
+                    },
+                    "404": {
+                        "description": "Attempt not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/processes": {
+            "get": {
+                "description": "Get all the processes from the process engine",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "processes"
+                ],
+                "summary": "Retrieves all processes",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Process"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/processes/byCreator/{creatorName}": {
+            "get": {
+                "description": "Retrieve a list of processes filtered by Creator Name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "processes"
+                ],
+                "summary": "Retrieves processes by Creator Name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Creator's Name",
+                        "name": "creatorName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Process"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/processes/status/{corId}": {
+            "get": {
+                "description": "Get the most recent status of a specific process by Correlation ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "processes"
+                ],
+                "summary": "Retrieves the status of a process by Correlation ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Correlation ID",
+                        "name": "corId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Process"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/processes/{corId}": {
+            "get": {
+                "description": "Retrieve a list of processes by their Correlation ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "processes"
+                ],
+                "summary": "Retrieves a process by Correlation ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Correlation ID",
+                        "name": "corId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Process"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "controllers.AttemptBody": {
+            "description": "AttemptBody is used to validate the request body for starting or getting an attempt.",
+            "type": "object",
+            "required": [
+                "token"
+            ],
+            "properties": {
+                "challengeName": {
+                    "description": "Email string ` + "`" + `json:\"email\" validate:\"required\"` + "`" + `",
+                    "type": "string"
+                },
+                "corId": {
+                    "type": "string"
+                },
+                "creatorName": {
+                    "type": "string"
+                },
+                "eventStatus": {
+                    "type": "string"
+                },
+                "imageRegistryLink": {
+                    "type": "string"
+                },
+                "participant": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.CreateChallengeMessage": {
+            "type": "object",
+            "required": [
+                "challengeName",
+                "creatorName",
+                "duration",
+                "imageName",
+                "imageTag",
+                "participants"
+            ],
+            "properties": {
+                "challengeName": {
+                    "type": "string"
+                },
+                "corId": {
+                    "type": "string"
+                },
+                "creatorName": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "eventStatus": {
+                    "type": "string"
+                },
+                "imageName": {
+                    "type": "string"
+                },
+                "imageTag": {
+                    "type": "string"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.Attempt": {
+            "type": "object",
+            "properties": {
+                "challengeName": {
+                    "type": "string"
+                },
+                "creatorName": {
+                    "type": "string"
+                },
+                "imageRegistryLink": {
+                    "type": "string"
+                },
+                "ipaddress": {
+                    "type": "string"
+                },
+                "participant": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "number"
+                },
+                "sshkey": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Challenge": {
+            "type": "object",
+            "properties": {
+                "challengeName": {
+                    "type": "string"
+                },
+                "corId": {
+                    "type": "string"
+                },
+                "creatorName": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "imageName": {
+                    "type": "string"
+                },
+                "imageRegistryLink": {
+                    "type": "string"
+                },
+                "imageTag": {
+                    "type": "string"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Image": {
+            "type": "object",
+            "properties": {
+                "corId": {
+                    "type": "string"
+                },
+                "creatorName": {
+                    "type": "string"
+                },
+                "imageName": {
+                    "type": "string"
+                },
+                "imageRegistryLink": {
+                    "type": "string"
+                },
+                "imageTag": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Process": {
+            "type": "object",
+            "properties": {
+                "challengeName": {
+                    "type": "string"
+                },
+                "corId": {
+                    "type": "string"
+                },
+                "creatorName": {
+                    "type": "string"
+                },
+                "event": {
+                    "type": "string"
+                },
+                "eventStatus": {
+                    "type": "string"
+                },
+                "imageName": {
+                    "type": "string"
+                },
+                "imageTag": {
+                    "type": "string"
+                },
+                "participant": {
+                    "type": "string"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "timestamp": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "models.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "corId": {
+                    "description": "CorId represents the correlation ID of the attempt.",
+                    "type": "string"
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it

@@ -24,6 +24,15 @@ type ImageController struct{}
 
 var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
 
+// GetAllImages godoc
+//	@Summary		Retrieve all images
+//	@Description	Get all image records from the database
+//	@Tags			images
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{array}		models.Image
+//	@Failure		500	{object}	models.HTTPError
+//	@Router			/images [get]
 func (t ImageController) GetAllImages(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -47,6 +56,17 @@ func (t ImageController) GetAllImages(c *gin.Context) {
 	c.JSON(http.StatusOK, images)
 }
 
+// GetImageByCorId godoc
+//	@Summary		Retrieve an image by Correlation ID
+//	@Description	Get a single image record by Correlation ID (corId)
+//	@Tags			images
+//	@Accept			json
+//	@Produce		json
+//	@Param			corId	path		string	true	"Correlation ID"
+//	@Success		200		{object}	models.Image
+//	@Failure		400		{object}	models.HTTPError
+//	@Failure		404		{object}	models.HTTPError
+//	@Router			/images/{corId} [get]
 func (t ImageController) GetImageByCorId(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
@@ -74,7 +94,17 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 	c.JSON(http.StatusOK, image)
 }
 
-// @Summary: Get a image by creatorName
+// GetImageByCreatorName godoc
+//	@Summary		Retrieve images by creator's name
+//	@Description	Get all image records from the database filtered by creator's name
+//	@Tags			images
+//	@Accept			json
+//	@Produce		json
+//	@Param			creatorName	path		string	true	"Creator's Name"
+//	@Success		200			{array}		models.Image
+//	@Failure		400			{object}	models.HTTPError
+//	@Failure		404			{object}	models.HTTPError
+//	@Router			/images/byCreator/{creatorName} [get]
 func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
 	if creatorName == "" {
@@ -119,7 +149,20 @@ type UploadImageMessage struct {
 	EventStatus string `json:"eventStatus" validate:"required"`
 }
 
-// POST Handler to upload a image zip file
+// UploadImage godoc
+//	@Summary		Upload an image
+//	@Description	Upload an image file and trigger image creation process
+//	@Tags			images
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			imageName	formData	string					true	"Name of the Image"
+//	@Param			creatorName	formData	string					true	"Name of the Creator"
+//	@Param			imageTag	formData	string					true	"Tag of the Image"
+//	@Param			imageFile	formData	file					true	"The image file to upload"
+//	@Success		200			{object}	map[string]interface{}	"A map containing the correlation ID"
+//	@Failure		400			{object}	models.HTTPError
+//	@Failure		500			{object}	models.HTTPError
+//	@Router			/images/upload [post]
 func (t ImageController) UploadImage(c *gin.Context) {
 
 	// create uploadImage message

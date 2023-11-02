@@ -18,7 +18,15 @@ type ProcessController struct{}
 
 var processCollection *mongo.Collection = configs.OpenCollection(configs.Client, "process_engine")
 
-// Get all the processes from the process engine
+// GetAllProcesses godoc
+//	@Summary		Retrieves all processes
+//	@Description	Get all the processes from the process engine
+//	@Tags			processes
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{array}		models.Process
+//	@Failure		500	{object}	models.HTTPError
+//	@Router			/processes [get]
 func (t ProcessController) GetAllProcesses(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -46,7 +54,17 @@ func (t ProcessController) GetAllProcesses(c *gin.Context) {
 	c.JSON(http.StatusOK, process)
 }
 
-// retrieve a list of processes by their corID
+// GetProcessByCorID godoc
+//	@Summary		Retrieves a process by Correlation ID
+//	@Description	Retrieve a list of processes by their Correlation ID
+//	@Tags			processes
+//	@Accept			json
+//	@Produce		json
+//	@Param			corId	path		string	true	"Correlation ID"
+//	@Success		200		{object}	models.Process
+//	@Failure		400		{object}	models.HTTPError
+//	@Failure		404		{object}	models.HTTPError
+//	@Router			/processes/{corId} [get]
 func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
@@ -74,6 +92,17 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 	c.JSON(http.StatusOK, process)
 }
 
+// GetProcessByCreatorName godoc
+//	@Summary		Retrieves processes by Creator Name
+//	@Description	Retrieve a list of processes filtered by Creator Name
+//	@Tags			processes
+//	@Accept			json
+//	@Produce		json
+//	@Param			creatorName	path		string	true	"Creator's Name"
+//	@Success		200			{array}		models.Process
+//	@Failure		400			{object}	models.HTTPError
+//	@Failure		404			{object}	models.HTTPError
+//	@Router			/processes/byCreator/{creatorName} [get]
 func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
 	if creatorName == "" {
@@ -108,6 +137,18 @@ func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
 	c.JSON(http.StatusOK, process)
 }
 
+// GetProcessStatusByCorId godoc
+//	@Summary		Retrieves the status of a process by Correlation ID
+//	@Description	Get the most recent status of a specific process by Correlation ID
+//	@Tags			processes
+//	@Accept			json
+//	@Produce		json
+//	@Param			corId	path		string	true	"Correlation ID"
+//	@Success		200		{object}	models.Process
+//	@Failure		400		{object}	models.HTTPError
+//	@Failure		404		{object}	models.HTTPError
+//	@Failure		500		{object}	models.HTTPError
+//	@Router			/processes/status/{corId} [get]
 func (t ProcessController) GetProcessStatusByCorId(c *gin.Context) {
     corId := c.Param("corId")
 	if corId == "" {
