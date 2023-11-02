@@ -1,6 +1,29 @@
 stages:
   - Test
   - Release
+  - Update Chart
+
+
+##############################################################################
+##                              Variables                                   ##
+##############################################################################
+variables:
+  # AWS_WEB_IDENTITY_TOKEN_FILE: /tmp/web-identity-token
+  CD_CHART_REPO: platform-api-charts
+  CD_GIT_REPOSITORY: git@gitlab.com:cs302-2023/g3-team8/project/k8s/platform-api-charts.git
+  CD_MANIFEST_FILE: values.yaml
+  APP_NAME: gitops-argocd-deploy
+  CHART_FOLDER: helm
+
+##############################################################################
+##                Setup and Enable SSH                                      ##
+##############################################################################
+.enable_ssh: &enable_ssh |-
+  apk add --no-cache git
+  mkdir -p /root/.ssh
+  echo "$SSH_PRIVATE_KEY" > /root/.ssh/id_rsa
+  ssh-keyscan -H gitlab.com > /root/.ssh/known_hosts
+  chmod 600 /root/.ssh/id_rsa
 
 lint:
   image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
@@ -31,3 +54,32 @@ release-image:
     - docker push "$CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:$CI_COMMIT_SHA"
   when: manual
 
+
+update_chart_manifest:
+  stage: Update Chart
+  image: docker:24.0.2
+  services:
+    - docker:24.0.2-dind
+  only:
+    - main
+  needs:
+    - release-image
+  variables:
+    GIT_STRATEGY: none
+  retry: 2
+  before_script:
+    - *enable_ssh
+  script:
+    # Configure Git
+    - git config --global user.name $APP_NAME
+    - git config --global user.email $APP_NAME"@gitlab.com"
+    - git clone --single-branch --branch main $CD_GIT_REPOSITORY
+    - cd $CD_CHART_REPO
+    - cd $CHART_FOLDER
+    # HELM Update
+    - >
+      tag=$(cat values.yaml | grep tag: | awk '{print $2}')
+    - sed -i "s/$tag/$CI_COMMIT_SHORT_SHA/" values.yaml
+    - cat $CD_MANIFEST_FILE
+    - cd ..
+    - git commit -am "🔥 update image tag" && git push origin main
