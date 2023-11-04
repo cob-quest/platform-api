@@ -79,15 +79,7 @@ func InitIndexes(client *mongo.Client) {
 		Options: options.Index().SetUnique(true),
 	}
 
-	challengeCompositeIndexModel := mongo.IndexModel{
-		Keys:    bson.D{
-            {Key: "challengeName", Value: 1},
-            {Key: "creatorName", Value: 1},
-        },
-		Options: options.Index().SetUnique(true),
-	}
-
-    challengeIndexModels := []mongo.IndexModel{challengeCorIdIndexModel, challengeCompositeIndexModel}
+    challengeIndexModels := []mongo.IndexModel{challengeCorIdIndexModel}
 	challengeIndexCreated, err := challengeCollection.Indexes().CreateMany(context.Background(), challengeIndexModels)
 	if err != nil {
 		log.Fatal(err)

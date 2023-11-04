@@ -229,6 +229,14 @@ func (t ImageController) UploadImage(c *gin.Context) {
 		return
 	}
 
+	// set eventStatus
+	req.EventStatus = "imageCreating"
+
+	// set corId
+	req.CorID = corId
+
+	log.Printf("Uploaded file to %s", req)
+
 	// validate json before passing to mq
 	valid := validator.New()
 	err = valid.Struct(req)
@@ -236,9 +244,6 @@ func (t ImageController) UploadImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to validate form"})
 		return
 	}
-
-	// set eventStatus
-	req.EventStatus = "imageCreating"
 
 	// marshall data
 	jsonReq, err := json.Marshal(req)

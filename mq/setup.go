@@ -13,7 +13,7 @@ var (
 )
 
 const (
-	ROUTE_IMAGE_BUILD      = "platform.fromService.imageBuild"
+	ROUTE_IMAGE_BUILD      = "platform.fromService.imageCreate"
 	ROUTE_CHALLENGE_CREATE = "platform.fromService.challengeCreate"
 	ROUTE_CHALLENGE_START  = "platform.fromService.challengeStart"
 	QUEUE_PLATFORM_FROM     = "queue.platform.fromService"
