@@ -32,7 +32,7 @@ var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "
 //	@Produce		json
 //	@Success		200	{array}		models.Image
 //	@Failure		500	{object}	models.HTTPError
-//	@Router			/images [get]
+//	@Router			/image [get]
 func (t ImageController) GetAllImages(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -66,7 +66,7 @@ func (t ImageController) GetAllImages(c *gin.Context) {
 //	@Success		200		{object}	models.Image
 //	@Failure		400		{object}	models.HTTPError
 //	@Failure		404		{object}	models.HTTPError
-//	@Router			/images/{corId} [get]
+//	@Router			/image/{corId} [get]
 func (t ImageController) GetImageByCorId(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
@@ -104,7 +104,7 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 //	@Success		200			{array}		models.Image
 //	@Failure		400			{object}	models.HTTPError
 //	@Failure		404			{object}	models.HTTPError
-//	@Router			/images/byCreator/{creatorName} [get]
+//	@Router			/image/byCreator/{creatorName} [get]
 func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
 	if creatorName == "" {
@@ -162,7 +162,7 @@ type UploadImageMessage struct {
 //	@Success		200			{object}	map[string]interface{}	"A map containing the correlation ID"
 //	@Failure		400			{object}	models.HTTPError
 //	@Failure		500			{object}	models.HTTPError
-//	@Router			/images/upload [post]
+//	@Router			/image/upload [post]
 func (t ImageController) UploadImage(c *gin.Context) {
 
 	// create uploadImage message
