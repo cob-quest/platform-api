@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/challenges": {
+        "/challenge": {
             "get": {
                 "description": "Retrieves a list of all challenges.",
                 "produces": [
@@ -24,7 +24,7 @@ const docTemplate = `{
                 "tags": [
                     "challenges"
                 ],
-                "summary": "Get all challenges",
+                "summary": "Get all challenges Aaaaaaaaaaa",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -52,7 +52,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "challenges"
+                    "challenge"
                 ],
                 "summary": "Create a new challenge",
                 "parameters": [
@@ -74,13 +74,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid request body",
+                        "description": "Challenge name already exists",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "No such image",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Failed to marshal JSON or Failed to publish message",
+                        "description": "Error occured while retrieving image",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
                         }
@@ -88,7 +94,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/challenges/creator/{creatorName}": {
+        "/challenge/creator/{creatorName}": {
             "get": {
                 "description": "Retrieves a list of challenges based on the creator's name.",
                 "produces": [
@@ -128,11 +134,17 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
                         }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve challenges",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
                     }
                 }
             }
         },
-        "/challenges/{corId}": {
+        "/challenge/{corId}": {
             "get": {
                 "description": "Retrieves a challenge based on its CorID.",
                 "produces": [

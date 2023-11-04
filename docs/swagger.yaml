@@ -148,7 +148,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /challenges:
+  /challenge:
     get:
       description: Retrieves a list of all challenges.
       produces:
@@ -164,7 +164,7 @@ paths:
           description: Failed to retrieve challenges
           schema:
             $ref: '#/definitions/models.HTTPError'
-      summary: Get all challenges
+      summary: Get all challenges Aaaaaaaaaaa
       tags:
       - challenges
     post:
@@ -186,17 +186,21 @@ paths:
           schema:
             $ref: '#/definitions/models.SuccessResponse'
         "400":
-          description: Invalid request body
+          description: Challenge name already exists
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "404":
+          description: No such image
           schema:
             $ref: '#/definitions/models.HTTPError'
         "500":
-          description: Failed to marshal JSON or Failed to publish message
+          description: Error occured while retrieving image
           schema:
             $ref: '#/definitions/models.HTTPError'
       summary: Create a new challenge
       tags:
-      - challenges
-  /challenges/{corId}:
+      - challenge
+  /challenge/{corId}:
     get:
       description: Retrieves a challenge based on its CorID.
       parameters:
@@ -223,7 +227,7 @@ paths:
       summary: Get challenge by CorID
       tags:
       - challenges
-  /challenges/creator/{creatorName}:
+  /challenge/creator/{creatorName}:
     get:
       description: Retrieves a list of challenges based on the creator's name.
       parameters:
@@ -247,6 +251,10 @@ paths:
             $ref: '#/definitions/models.HTTPError'
         "404":
           description: No challenges with creatorName found
+          schema:
+            $ref: '#/definitions/models.HTTPError'
+        "500":
+          description: Failed to retrieve challenges
           schema:
             $ref: '#/definitions/models.HTTPError'
       summary: Get challenge by creator name

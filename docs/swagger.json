@@ -4,7 +4,7 @@
         "contact": {}
     },
     "paths": {
-        "/challenges": {
+        "/challenge": {
             "get": {
                 "description": "Retrieves a list of all challenges.",
                 "produces": [
@@ -13,7 +13,7 @@
                 "tags": [
                     "challenges"
                 ],
-                "summary": "Get all challenges",
+                "summary": "Get all challenges Aaaaaaaaaaa",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -41,7 +41,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "challenges"
+                    "challenge"
                 ],
                 "summary": "Create a new challenge",
                 "parameters": [
@@ -63,13 +63,19 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request body",
+                        "description": "Challenge name already exists",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "No such image",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
                         }
                     },
                     "500": {
-                        "description": "Failed to marshal JSON or Failed to publish message",
+                        "description": "Error occured while retrieving image",
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
                         }
@@ -77,7 +83,7 @@
                 }
             }
         },
-        "/challenges/creator/{creatorName}": {
+        "/challenge/creator/{creatorName}": {
             "get": {
                 "description": "Retrieves a list of challenges based on the creator's name.",
                 "produces": [
@@ -117,11 +123,17 @@
                         "schema": {
                             "$ref": "#/definitions/models.HTTPError"
                         }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve challenges",
+                        "schema": {
+                            "$ref": "#/definitions/models.HTTPError"
+                        }
                     }
                 }
             }
         },
-        "/challenges/{corId}": {
+        "/challenge/{corId}": {
             "get": {
                 "description": "Retrieves a challenge based on its CorID.",
                 "produces": [

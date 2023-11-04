@@ -23,13 +23,13 @@ type ChallengeController struct{}
 
 var challengeCollection *mongo.Collection = configs.OpenCollection(configs.Client, "challenge")
 
-//	@Summary		Get all challenges
+//	@Summary		Get all challenges Aaaaaaaaaaa
 //	@Description	Retrieves a list of all challenges.
 //	@Tags			challenges
 //	@Produce		json
 //	@Success		200	{array}		models.Challenge
 //	@Failure		500	{object}	models.HTTPError	"Failed to retrieve challenges"
-//	@Router			/challenges [get]
+//	@Router			/challenge [get]
 func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -65,13 +65,13 @@ func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 //	@Success		200		{object}	models.Challenge
 //	@Failure		400		{object}	models.HTTPError	"Invalid corId"
 //	@Failure		404		{object}	models.HTTPError	"No challenge found with given corId"
-//	@Router			/challenges/{corId} [get]
+//	@Router			/challenge/{corId} [get]
 func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
 		handleError(
 			c,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			"Invalid corId",
 			errors.New("corId cannot be empty"),
 		)
@@ -92,7 +92,7 @@ func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 		}
 		handleError(
 			c,
-			http.StatusBadRequest,
+			http.StatusNotFound,
 			msg,
 			err,
 		)
@@ -110,7 +110,8 @@ func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 //	@Success		200			{array}		models.Challenge
 //	@Failure		400			{object}	models.HTTPError	"Invalid creatorName"
 //	@Failure		404			{object}	models.HTTPError	"No challenges with creatorName found"
-//	@Router			/challenges/creator/{creatorName} [get]
+//	@Failure		500			{object}	models.HTTPError	"Failed to retrieve challenges"
+//	@Router			/challenge/creator/{creatorName} [get]
 func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 
 	creatorName := c.Param("creatorName")
@@ -160,7 +161,7 @@ func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 	if len(challenge) == 0 {
 		handleError(
 			c,
-			http.StatusInternalServerError,
+			http.StatusNotFound,
 			"No challenges with creatorName found",
 			err,
 		)
@@ -185,14 +186,17 @@ type CreateChallengeMessage struct {
 
 //	@Summary		Create a new challenge
 //	@Description	Creates a new challenge with the provided details.
-//	@Tags			challenges
+//	@Tags			challenge
 //	@Accept			json
 //	@Produce		json
 //	@Param			challenge	body		CreateChallengeMessage	true	"Create Challenge Content"
 //	@Success		200			{object}	models.SuccessResponse
 //	@Failure		400			{object}	models.HTTPError	"Invalid request body"
+//	@Failure		400			{object}	models.HTTPError	"Challenge name already exists"
+//	@Failure		404			{object}	models.HTTPError	"No such image"
 //	@Failure		500			{object}	models.HTTPError	"Failed to marshal JSON or Failed to publish message"
-//	@Router			/challenges [post]
+//	@Failure		500			{object}	models.HTTPError	"Error occured while retrieving image"
+//	@Router			/challenge [post]
 func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
 	// create createChallenge message
@@ -234,7 +238,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
 		handleError(
 			c,
-			http.StatusInternalServerError,
+			http.StatusNotFound,
 			"No such image",
 			err,
 		)
@@ -257,7 +261,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 	if !(err != nil && errors.Is(err, mongo.ErrNoDocuments)) {
 		handleError(
 			c,
-			http.StatusInternalServerError,
+			http.StatusBadRequest,
 			"Challenge name already exists",
 			err,
 		)
