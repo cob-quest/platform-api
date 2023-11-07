@@ -78,7 +78,8 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 	var process models.Process
 
 	filter := bson.D{{Key: "corId", Value: corId}}
-	err := processCollection.FindOne(ctx, filter).Decode(&process)
+	opts := options.FindOne().SetSort(bson.D{{Key: "timestamp", Value: -1}}) // -1 for descending order
+	err := processCollection.FindOne(ctx, filter, opts).Decode(&process)
 
 	if err != nil {
 		msg := "Failed to retrieve challenge"
