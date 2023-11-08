@@ -1,0 +1,31 @@
+version: '3'
+volumes:
+  rabbitmq_data:
+  mongo_data:
+services:
+  ################################
+  # Platform-API
+  ################################
+  # platform-api:
+  #   image: platform-api:latest
+  #   container_name: my-platform-api
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - ./secrets/test.env:/app/secrets/.env
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.test
+  #   depends_on:
+  #     - mongo
+
+  ################################
+  # MongoDB: Database
+  ################################
+  mongo:
+    image: mongo:latest
+    container_name: my-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
