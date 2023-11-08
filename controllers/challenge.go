@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"platform_api/configs"
 	"platform_api/models"
 	"platform_api/mq"
 	"platform_api/services"
@@ -20,13 +19,11 @@ import (
 
 // ChallengeController is the controller for handling challenges.
 type ChallengeController struct{
-	ChallengeCollection *mongo.Collection
 	ChallengeService	services.ChallengeService
 }
 
 func NewChallengeController(client *mongo.Client) *ChallengeController {
 	return &ChallengeController{
-		ChallengeCollection: configs.OpenCollection(client, "challenge"),
 		ChallengeService: *services.NewChallengeService(client),
 	}
 }
