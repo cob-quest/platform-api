@@ -31,7 +31,7 @@ import (
 // @externalDocs.url			https://swagger.io/resources/open-api/
 func InitRoutes() {
 
-	challenge := new(controllers.ChallengeController)
+	challenge := controllers.NewChallengeController(configs.Client)
 	image := new(controllers.ImageController)
 	process := new(controllers.ProcessController)
 	attempt := new(controllers.AttemptController)
