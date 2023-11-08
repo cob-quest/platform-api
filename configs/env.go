@@ -45,6 +45,15 @@ func GetMongoURI() string {
 	if err != nil {
 		panic("Error loading env file")
 	}
+
+	if os.Getenv("ENV") == "test" {
+		err = godotenv.Load("secrets/.env.test")
+		if err != nil {
+			panic("Error loading test env")
+		}
+		fmt.Println(os.Getenv("MONGO_URI"))
+		return os.Getenv("MONGO_URI")
+	}
 	MONGO_USER := os.Getenv("MONGODB_USERNAME")
 	MONGO_PASS := os.Getenv("MONGODB_PASSWORD")
 	MONGO_HOSTNAME := os.Getenv("MONGODB_HOSTNAME")
