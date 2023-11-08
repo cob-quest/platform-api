@@ -16,9 +16,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Seed test data
 
-func seed() {
+func seed_images() {
 	// Create a context with a timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -58,7 +57,7 @@ func seed() {
 
 func TestGetAllImages(t *testing.T) {
 	// Seed the test data into the DB
-	seed()
+	seed_images()
 
 	// Create a new instance of the Gin router
 	r := gin.Default()
