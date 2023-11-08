@@ -1,28 +1,29 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"platform_api/configs"
-	"platform_api/models"
 	"platform_api/mq"
 	"platform_api/services"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ImageController struct{}
+type ImageController struct{
+	ImageService	services.ImageService
+}
 
-var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
+func NewImageController(client *mongo.Client) *ImageController {
+	return &ImageController{ImageService: *services.NewImageService(client)}
+}
+
+// var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
 
 // GetAllImages godoc
 //
@@ -35,26 +36,17 @@ var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "
 //	@Failure		500	{object}	models.HTTPError
 //	@Router			/image [get]
 func (t ImageController) GetAllImages(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	options := options.Find()
-	cursor, err := imageCollection.Find(ctx, bson.M{}, options)
+	images, statusCode, err := t.ImageService.GetAllImages()
 	if err != nil {
-		panic(err)
+		handleError(
+			c,
+			statusCode,
+			"Failed to retrieve images",
+			err,
+		)
 	}
 
-	defer cursor.Close(ctx)
-
-	var images []models.Image
-	err = cursor.All(ctx, &images)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve images"})
-		return
-	}
-
-	c.JSON(http.StatusOK, images)
+	c.JSON(statusCode, *images)
 }
 
 // GetImageByCorId godoc
@@ -71,29 +63,19 @@ func (t ImageController) GetAllImages(c *gin.Context) {
 //	@Router			/image/{corId} [get]
 func (t ImageController) GetImageByCorId(c *gin.Context) {
 	corId := c.Param("corId")
-	if corId == "" {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "ID cannot be empty"})
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	var image models.Image
-
-	filter := bson.D{{Key: "corId", Value: corId}}
-	err := imageCollection.FindOne(ctx, filter).Decode(&image)
-
+	
+	image, statusCode, err := t.ImageService.GetImageByCorId(corId)
 	if err != nil {
-		msg := "Failed to retrieve image"
-		if err == mongo.ErrNoDocuments {
-			msg = "No image found with given Image ID"
-		}
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: msg})
+		handleError(
+			c,
+			statusCode,
+			"Failed to retrieve image",
+			err,
+		)
 		return
 	}
 
-	c.JSON(http.StatusOK, image)
+	c.JSON(statusCode, *image)
 }
 
 // GetImageByCreatorName godoc
@@ -110,36 +92,19 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 //	@Router			/image/byCreator/{creatorName} [get]
 func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
-	if creatorName == "" {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "creatorName cannot be empty"})
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	filter := bson.D{{Key: "creatorName", Value: creatorName}}
-	cursor, err := imageCollection.Find(ctx, filter)
+	
+	images, statusCode, err := t.ImageService.GetImageByCreatorName(creatorName)
 	if err != nil {
-		panic(err)
-	}
-
-	defer cursor.Close(ctx)
-
-	var images []models.Image
-	err = cursor.All(ctx, &images)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "Failed to retrieve images"})
+		handleError(
+			c,
+			statusCode,
+			"Failed to retrieve images",
+			err,
+		)
 		return
 	}
 
-	if len(images) == 0 {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "No images with creatorName found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, images)
+	c.JSON(http.StatusOK, *images)
 }
 
 // POST Handler Body
@@ -174,7 +139,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 
 	// parse the result
 	if c.PostForm("imageName") == "" || c.PostForm("creatorName") == "" || c.PostForm("imageTag") == "" {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Missing imageName, creatorName or imageTag"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("image name, tag, and creatorName cannot be empty"),
+		)
 		return
 	}
 
@@ -183,24 +153,26 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	req.ImageTag = c.PostForm("imageTag")
 	req.CreatorName = c.PostForm("creatorName")
 
-	// ctx for 10s
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// check if such imagename+tag exists under this creator, if exists return it exists
-	var image models.Image
-	filter := bson.D{{Key: "imageName", Value: req.ImageName}, {Key: "creatorName", Value: req.CreatorName}, {Key: "imageTag", Value: req.ImageTag}}
-
-	err := imageCollection.FindOne(ctx, filter).Decode(&image)
-	if err == nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "ImageName and imageTag exists"})
+	statusCode, err := t.ImageService.CheckImageByImageAndCreatorName(req.ImageName, req.CreatorName)
+	if err != nil {
+		handleError(
+			c,
+			statusCode,
+			"Error",
+			err,
+		)
 		return
 	}
 
 	// get the formFile
 	formFile, err := c.FormFile("imageFile")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: err.Error()})
+		handleError(
+			c,
+			http.StatusInternalServerError,
+			"Error",
+			err,
+		)
 		return
 	}
 
@@ -210,7 +182,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	fileName := formFile.Filename
 	file, err := formFile.Open()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: err.Error()})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			err,
+		)
 		return
 	}
 
@@ -225,7 +202,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	uploader := services.GetUploader()
 	err = uploader.UploadFile(file, req.S3Path)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to upload file"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			err,
+		)
 		return
 	}
 
@@ -241,28 +223,48 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	valid := validator.New()
 	err = valid.Struct(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to validate form"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			err,
+		)
 		return
 	}
 
 	// marshall data
 	jsonReq, err := json.Marshal(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to unmarshall data"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("failed to unmarshal data"),
+		)
 		return
 	}
 
 	// publish to mq
 	err = mq.Pub(mq.EXCHANGE_TOPIC_ROUTER, mq.ROUTE_IMAGE_BUILD, jsonReq)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to format request"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("failed to format request"),
+		)
 		return
 	}
 
 	// response
 	resp := map[string]interface{}{"corId": corId}
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to generate corId"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("failed to generate corId"),
+		)
 		return
 	}
 
