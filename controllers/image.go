@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"platform_api/models"
 	"platform_api/mq"
 	"platform_api/services"
 
@@ -139,7 +139,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 
 	// parse the result
 	if c.PostForm("imageName") == "" || c.PostForm("creatorName") == "" || c.PostForm("imageTag") == "" {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Missing imageName, creatorName or imageTag"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("image name, tag, and creatorName cannot be empty"),
+		)
 		return
 	}
 
@@ -162,7 +167,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	// get the formFile
 	formFile, err := c.FormFile("imageFile")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: err.Error()})
+		handleError(
+			c,
+			http.StatusInternalServerError,
+			"Error",
+			err,
+		)
 		return
 	}
 
@@ -172,7 +182,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	fileName := formFile.Filename
 	file, err := formFile.Open()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: err.Error()})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			err,
+		)
 		return
 	}
 
@@ -187,7 +202,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	uploader := services.GetUploader()
 	err = uploader.UploadFile(file, req.S3Path)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to upload file"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			err,
+		)
 		return
 	}
 
@@ -203,28 +223,48 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	valid := validator.New()
 	err = valid.Struct(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to validate form"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			err,
+		)
 		return
 	}
 
 	// marshall data
 	jsonReq, err := json.Marshal(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to unmarshall data"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("failed to unmarshal data"),
+		)
 		return
 	}
 
 	// publish to mq
 	err = mq.Pub(mq.EXCHANGE_TOPIC_ROUTER, mq.ROUTE_IMAGE_BUILD, jsonReq)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to format request"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("failed to format request"),
+		)
 		return
 	}
 
 	// response
 	resp := map[string]interface{}{"corId": corId}
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Failed to generate corId"})
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Error",
+			errors.New("failed to generate corId"),
+		)
 		return
 	}
 
