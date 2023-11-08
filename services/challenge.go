@@ -42,7 +42,7 @@ func (t ChallengeService) GetAllChallenges() (*[]models.Challenge, int, error) {
 
 func (t ChallengeService) GetChallengeByCorID(corId string) (*models.Challenge, int, error) {
 	if corId == "" {
-		return nil, http.StatusBadRequest, errors.New("cor ID cannot be empty")
+		return nil, http.StatusBadRequest, errors.New("corId cannot be empty")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -93,7 +93,7 @@ func (t ChallengeService) GetChallengeByCreatorName(creatorName string) (*[]mode
 	return &challenges, http.StatusOK, nil
 }
 
-func (t ChallengeService) GetChallengeByChallengeAndCreatorName(creatorName string, challengeName string) (int, error) {
+func (t ChallengeService) CheckChallengeByChallengeAndCreatorName(challengeName string, creatorName string) (int, error) {
 	if creatorName == "" || challengeName == "" {
 		return http.StatusBadRequest, errors.New("creator and challenge name cannot be empty")
 	}	
@@ -111,9 +111,40 @@ func (t ChallengeService) GetChallengeByChallengeAndCreatorName(creatorName stri
 	}}
 
 	err := t.ChallengeCollection.FindOne(ctx, filter).Decode(&challenge)
-	if !(err != nil && errors.Is(err, mongo.ErrNoDocuments)) {
-		return http.StatusOK, err
+	if err == nil {
+		return http.StatusBadRequest, errors.New("challenge name already exists")
 	}
 
-	return http.StatusNotFound, nil
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}
+
+// ------- CHALLENGE CONTROLLER ---------
+func (t ImageService) CheckImageExists(imageName string, imageTag string, creatorName string) (int, error) {
+	if imageName == "" || imageTag == "" || creatorName == "" {
+		return http.StatusBadRequest, errors.New("image name, tag, and creatorName cannot be empty")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var image models.Image
+	filter := bson.D{
+		{Key: "imageName", Value: imageName},
+		{Key: "creatorName", Value: creatorName},
+		{Key: "imageTag", Value: imageTag},
+	}
+	err := t.ImageCollection.FindOne(ctx, filter).Decode(&image)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return http.StatusNotFound, errors.New("image is not found given image name, tag, and creatorName")
+		} else {
+			return http.StatusInternalServerError, err
+		}
+	}
+
+	return http.StatusOK, nil
 }

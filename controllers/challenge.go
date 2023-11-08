@@ -1,34 +1,29 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
-	"platform_api/models"
 	"platform_api/mq"
 	"platform_api/services"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // ChallengeController is the controller for handling challenges.
 type ChallengeController struct{
 	ChallengeService	services.ChallengeService
+	ImageService		services.ImageService
 }
 
 func NewChallengeController(client *mongo.Client) *ChallengeController {
 	return &ChallengeController{
 		ChallengeService: *services.NewChallengeService(client),
+		ImageService: *services.NewImageService(client),
 	}
 }
-
-// var challengeCollection *mongo.Collection = configs.OpenCollection(configs.Client, "challenge")
 
 // @Summary		Get all challenges Aaaaaaaaaaa
 // @Description	Retrieves a list of all challenges.
@@ -99,6 +94,7 @@ func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 			"Failed to retrieve challenges",
 			err,
 		)
+		return
 	}
 
 	// success
@@ -160,45 +156,28 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	// ctx for 10s
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// check if the image name exists
-	var image models.Image
-	filter := bson.D{
-		{Key: "imageName", Value: req.ImageName},
-		{Key: "creatorName", Value: req.CreatorName},
-		{Key: "imageTag", Value: req.ImageTag},
-	}
-	err = imageCollection.FindOne(ctx, filter).Decode(&image)
-	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
+	// check if image exists
+	statusCode, err := t.ImageService.CheckImageExists(req.ImageName, req.ImageTag, req.CreatorName)
+	if err != nil {
 		handleError(
 			c,
-			http.StatusInternalServerError,
-			"No such image",
-			err,
-		)
-		return
-	} else if err != nil {
-		handleError(
-			c,
-			http.StatusInternalServerError,
-			"Error occured while retrieving image",
+			statusCode,
+			"Error",
 			err,
 		)
 		return
 	}
 
 	// check if the challenge name already exists
-	statusCode, err := t.ChallengeService.GetChallengeByChallengeAndCreatorName(req.CreatorName, req.ChallengeName)
+	statusCode, err = t.ChallengeService.CheckChallengeByChallengeAndCreatorName(req.CreatorName, req.ChallengeName)
 	if err != nil {
 		handleError(
 			c,
 			statusCode,
-			"Error occured while retrieving image",
+			"Error",
 			err,
 		)
+		return
 	}
 
 	// set uuid

@@ -32,7 +32,7 @@ import (
 func InitRoutes() {
 
 	challenge := controllers.NewChallengeController(configs.Client)
-	image := new(controllers.ImageController)
+	image := controllers.NewImageController(configs.Client)
 	process := new(controllers.ProcessController)
 	attempt := new(controllers.AttemptController)
 
