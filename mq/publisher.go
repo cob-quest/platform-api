@@ -13,8 +13,10 @@ func Pub(ex string, key string, body []byte) error {
 
 	// open channel
 	c, err := AMQP_CONN.Channel()
-	if err != nil {
-		return err
+	for err != nil {
+		log.Printf("Failed to connect: %s, retrying in 5 seconds...", err)
+		c, err = ReestablishConnection()
+		time.Sleep(5 * time.Second)
 	}
 	defer c.Close()
 

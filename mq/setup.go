@@ -21,6 +21,32 @@ const (
 	EXCHANGE_DEFAULT       = "/"
 )
 
+func ReestablishConnection() (*amqp.Channel, error) {
+
+	// connect to mq
+	connStr := fmt.Sprintf(
+		"amqp://%s:%s@%s:%s/",
+		configs.AMQP_USERNAME,
+		configs.AMQP_PASSWORD,
+		configs.AMQP_HOSTNAME,
+		configs.AMQP_PORT,
+	)
+
+	// setup rabbitmq connection
+	conn, err := amqp.Dial(connStr)
+	if err != nil {
+		return nil, err
+	}
+	log.Println("Connected to MQ!")
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+
+	return ch, nil
+}
+
 // Init rabbitmq connection
 func Init() {
 
