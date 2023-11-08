@@ -23,13 +23,13 @@ type ChallengeController struct{}
 
 var challengeCollection *mongo.Collection = configs.OpenCollection(configs.Client, "challenge")
 
-//	@Summary		Get all challenges Aaaaaaaaaaa
-//	@Description	Retrieves a list of all challenges.
-//	@Tags			challenges
-//	@Produce		json
-//	@Success		200	{array}		models.Challenge
-//	@Failure		500	{object}	models.HTTPError	"Failed to retrieve challenges"
-//	@Router			/challenge [get]
+// @Summary		Get all challenges Aaaaaaaaaaa
+// @Description	Retrieves a list of all challenges.
+// @Tags			challenges
+// @Produce		json
+// @Success		200	{array}		models.Challenge
+// @Failure		500	{object}	models.HTTPError	"Failed to retrieve challenges"
+// @Router			/challenge [get]
 func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -57,15 +57,15 @@ func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 	c.JSON(http.StatusOK, challenges)
 }
 
-//	@Summary		Get challenge by CorID
-//	@Description	Retrieves a challenge based on its CorID.
-//	@Tags			challenges
-//	@Produce		json
-//	@Param			corId	path		string	true	"CorID of the Challenge"
-//	@Success		200		{object}	models.Challenge
-//	@Failure		400		{object}	models.HTTPError	"Invalid corId"
-//	@Failure		404		{object}	models.HTTPError	"No challenge found with given corId"
-//	@Router			/challenge/{corId} [get]
+// @Summary		Get challenge by CorID
+// @Description	Retrieves a challenge based on its CorID.
+// @Tags			challenges
+// @Produce		json
+// @Param			corId	path		string	true	"CorID of the Challenge"
+// @Success		200		{object}	models.Challenge
+// @Failure		400		{object}	models.HTTPError	"Invalid corId"
+// @Failure		404		{object}	models.HTTPError	"No challenge found with given corId"
+// @Router			/challenge/{corId} [get]
 func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 	corId := c.Param("corId")
 	if corId == "" {
@@ -92,7 +92,7 @@ func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 		}
 		handleError(
 			c,
-			http.StatusNotFound,
+			http.StatusInternalServerError,
 			msg,
 			err,
 		)
@@ -102,16 +102,16 @@ func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 	c.JSON(http.StatusOK, challenges)
 }
 
-//	@Summary		Get challenge by creator name
-//	@Description	Retrieves a list of challenges based on the creator's name.
-//	@Tags			challenges
-//	@Produce		json
-//	@Param			creatorName	path		string	true	"Name of the Challenge Creator"
-//	@Success		200			{array}		models.Challenge
-//	@Failure		400			{object}	models.HTTPError	"Invalid creatorName"
-//	@Failure		404			{object}	models.HTTPError	"No challenges with creatorName found"
-//	@Failure		500			{object}	models.HTTPError	"Failed to retrieve challenges"
-//	@Router			/challenge/creator/{creatorName} [get]
+// @Summary		Get challenge by creator name
+// @Description	Retrieves a list of challenges based on the creator's name.
+// @Tags			challenges
+// @Produce		json
+// @Param			creatorName	path		string	true	"Name of the Challenge Creator"
+// @Success		200			{array}		models.Challenge
+// @Failure		400			{object}	models.HTTPError	"Invalid creatorName"
+// @Failure		404			{object}	models.HTTPError	"No challenges with creatorName found"
+// @Failure		500			{object}	models.HTTPError	"Failed to retrieve challenges"
+// @Router			/challenge/creator/{creatorName} [get]
 func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 
 	creatorName := c.Param("creatorName")
@@ -161,7 +161,7 @@ func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 	if len(challenge) == 0 {
 		handleError(
 			c,
-			http.StatusNotFound,
+			http.StatusInternalServerError,
 			"No challenges with creatorName found",
 			err,
 		)
@@ -184,19 +184,19 @@ type CreateChallengeMessage struct {
 	EventStatus   string   `json:"eventStatus"`
 }
 
-//	@Summary		Create a new challenge
-//	@Description	Creates a new challenge with the provided details.
-//	@Tags			challenge
-//	@Accept			json
-//	@Produce		json
-//	@Param			challenge	body		CreateChallengeMessage	true	"Create Challenge Content"
-//	@Success		200			{object}	models.SuccessResponse
-//	@Failure		400			{object}	models.HTTPError	"Invalid request body"
-//	@Failure		400			{object}	models.HTTPError	"Challenge name already exists"
-//	@Failure		404			{object}	models.HTTPError	"No such image"
-//	@Failure		500			{object}	models.HTTPError	"Failed to marshal JSON or Failed to publish message"
-//	@Failure		500			{object}	models.HTTPError	"Error occured while retrieving image"
-//	@Router			/challenge [post]
+// @Summary		Create a new challenge
+// @Description	Creates a new challenge with the provided details.
+// @Tags			challenge
+// @Accept			json
+// @Produce		json
+// @Param			challenge	body		CreateChallengeMessage	true	"Create Challenge Content"
+// @Success		200			{object}	models.SuccessResponse
+// @Failure		400			{object}	models.HTTPError	"Invalid request body"
+// @Failure		400			{object}	models.HTTPError	"Challenge name already exists"
+// @Failure		404			{object}	models.HTTPError	"No such image"
+// @Failure		500			{object}	models.HTTPError	"Failed to marshal JSON or Failed to publish message"
+// @Failure		500			{object}	models.HTTPError	"Error occured while retrieving image"
+// @Router			/challenge [post]
 func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
 	// create createChallenge message
@@ -233,12 +233,16 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
 	// check if the image name exists
 	var image models.Image
-	filter := bson.D{{Key: "imageName", Value: req.ImageName}, {Key: "creatorName", Value: req.CreatorName}, {Key: "imageTag", Value: req.ImageTag}}
+	filter := bson.D{
+		{Key: "imageName", Value: req.ImageName},
+		{Key: "creatorName", Value: req.CreatorName},
+		{Key: "imageTag", Value: req.ImageTag},
+	}
 	err = imageCollection.FindOne(ctx, filter).Decode(&image)
 	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
 		handleError(
 			c,
-			http.StatusNotFound,
+			http.StatusInternalServerError,
 			"No such image",
 			err,
 		)
@@ -255,7 +259,13 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 
 	// check if the challenge name already exists
 	var challenge models.Challenge
-	filter = bson.D{{Key: "challengeName", Value: req.ChallengeName}, {Key: "creatorName", Value: req.CreatorName}}
+	filter = bson.D{{
+		Key:   "challengeName",
+		Value: req.ChallengeName,
+	}, {
+		Key:   "creatorName",
+		Value: req.CreatorName,
+	}}
 	err = challengeCollection.FindOne(ctx, filter).Decode(&challenge)
 	// for the image to be valid, its name must not exist already
 	if !(err != nil && errors.Is(err, mongo.ErrNoDocuments)) {

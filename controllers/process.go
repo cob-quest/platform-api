@@ -19,6 +19,7 @@ type ProcessController struct{}
 var processCollection *mongo.Collection = configs.OpenCollection(configs.Client, "process_engine")
 
 // GetAllProcesses godoc
+//
 //	@Summary		Retrieves all processes
 //	@Description	Get all the processes from the process engine
 //	@Tags			processes
@@ -55,6 +56,7 @@ func (t ProcessController) GetAllProcesses(c *gin.Context) {
 }
 
 // GetProcessByCorID godoc
+//
 //	@Summary		Retrieves a process by Correlation ID
 //	@Description	Retrieve a list of processes by their Correlation ID
 //	@Tags			processes
@@ -86,7 +88,7 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 		if err == mongo.ErrNoDocuments {
 			msg = "No process found with given process corId"
 		}
-		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: msg})
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: msg})
 		return
 	}
 
@@ -94,6 +96,7 @@ func (t ProcessController) GetProcessByCorID(c *gin.Context) {
 }
 
 // GetProcessByCreatorName godoc
+//
 //	@Summary		Retrieves processes by Creator Name
 //	@Description	Retrieve a list of processes filtered by Creator Name
 //	@Tags			processes
@@ -131,7 +134,7 @@ func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
 	}
 
 	if len(process) == 0 {
-		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No process with creatorName found"})
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "No process with creatorName found"})
 		return
 	}
 
@@ -139,6 +142,7 @@ func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
 }
 
 // GetProcessStatusByCorId godoc
+//
 //	@Summary		Retrieves the status of a process by Correlation ID
 //	@Description	Get the most recent status of a specific process by Correlation ID
 //	@Tags			processes
@@ -151,7 +155,7 @@ func (t ProcessController) GetProcessByCreatorName(c *gin.Context) {
 //	@Failure		500		{object}	models.HTTPError
 //	@Router			/processes/status/{corId} [get]
 func (t ProcessController) GetProcessStatusByCorId(c *gin.Context) {
-    corId := c.Param("corId")
+	corId := c.Param("corId")
 	if corId == "" {
 		handleError(
 			c,
@@ -162,20 +166,20 @@ func (t ProcessController) GetProcessStatusByCorId(c *gin.Context) {
 		return
 	}
 
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    var process models.Process
-    filter := bson.D{
-        {Key: "corId", Value: corId},
-    }
+	var process models.Process
+	filter := bson.D{
+		{Key: "corId", Value: corId},
+	}
 
-    options := options.FindOne().SetSort(bson.D{{Key: "timestamp", Value: -1}})
-    err := processCollection.FindOne(ctx, filter, options).Decode(&process)
+	options := options.FindOne().SetSort(bson.D{{Key: "timestamp", Value: -1}})
+	err := processCollection.FindOne(ctx, filter, options).Decode(&process)
 	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
 		handleError(
 			c,
-			http.StatusNotFound,
+			http.StatusInternalServerError,
 			"Invalid CorId given",
 			err,
 		)
@@ -189,5 +193,6 @@ func (t ProcessController) GetProcessStatusByCorId(c *gin.Context) {
 		)
 		return
 	}
-    c.JSON(http.StatusOK, process)
+	c.JSON(http.StatusOK, process)
 }
+

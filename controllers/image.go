@@ -25,6 +25,7 @@ type ImageController struct{}
 var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
 
 // GetAllImages godoc
+//
 //	@Summary		Retrieve all images
 //	@Description	Get all image records from the database
 //	@Tags			images
@@ -57,6 +58,7 @@ func (t ImageController) GetAllImages(c *gin.Context) {
 }
 
 // GetImageByCorId godoc
+//
 //	@Summary		Retrieve an image by Correlation ID
 //	@Description	Get a single image record by Correlation ID (corId)
 //	@Tags			images
@@ -87,7 +89,7 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 		if err == mongo.ErrNoDocuments {
 			msg = "No image found with given Image ID"
 		}
-		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: msg})
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: msg})
 		return
 	}
 
@@ -95,6 +97,7 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 }
 
 // GetImageByCreatorName godoc
+//
 //	@Summary		Retrieve images by creator's name
 //	@Description	Get all image records from the database filtered by creator's name
 //	@Tags			images
@@ -132,7 +135,7 @@ func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 	}
 
 	if len(images) == 0 {
-		c.JSON(http.StatusNotFound, models.HTTPError{Code: http.StatusNotFound, Message: "No images with creatorName found"})
+		c.JSON(http.StatusInternalServerError, models.HTTPError{Code: http.StatusInternalServerError, Message: "No images with creatorName found"})
 		return
 	}
 
@@ -150,6 +153,7 @@ type UploadImageMessage struct {
 }
 
 // UploadImage godoc
+//
 //	@Summary		Upload an image
 //	@Description	Upload an image file and trigger image creation process
 //	@Tags			images
@@ -168,7 +172,6 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	// create uploadImage message
 	var req UploadImageMessage
 
-
 	// parse the result
 	if c.PostForm("imageName") == "" || c.PostForm("creatorName") == "" || c.PostForm("imageTag") == "" {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "Missing imageName, creatorName or imageTag"})
@@ -178,8 +181,7 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	// assign to Message
 	req.ImageName = c.PostForm("imageName")
 	req.ImageTag = c.PostForm("imageTag")
-	req.CreatorName= c.PostForm("creatorName")
-
+	req.CreatorName = c.PostForm("creatorName")
 
 	// ctx for 10s
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -188,14 +190,12 @@ func (t ImageController) UploadImage(c *gin.Context) {
 	// check if such imagename+tag exists under this creator, if exists return it exists
 	var image models.Image
 	filter := bson.D{{Key: "imageName", Value: req.ImageName}, {Key: "creatorName", Value: req.CreatorName}, {Key: "imageTag", Value: req.ImageTag}}
-	
+
 	err := imageCollection.FindOne(ctx, filter).Decode(&image)
 	if err == nil {
 		c.JSON(http.StatusBadRequest, models.HTTPError{Code: http.StatusBadRequest, Message: "ImageName and imageTag exists"})
 		return
-	} 
-
-	
+	}
 
 	// get the formFile
 	formFile, err := c.FormFile("imageFile")
