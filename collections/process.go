@@ -53,11 +53,7 @@ func (t ProcessCollection) GetAllProcessByCorID(corId string) (*[]models.Process
 	opts := options.Find().SetSort(bson.D{{Key: "timestamp", Value: -1}}) // -1 for descending order
 	cursor, err := t.Collection.Find(ctx, filter, opts)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, http.StatusNotFound, errors.New("process is not found by the corId")
-		} else {
-			return nil, http.StatusInternalServerError, err
-		}
+		return nil, http.StatusInternalServerError, err
 	}
 
 	defer cursor.Close(ctx)
@@ -66,6 +62,10 @@ func (t ProcessCollection) GetAllProcessByCorID(corId string) (*[]models.Process
 	err = cursor.All(ctx, &process)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
+	}
+
+	if len(process) == 0 {
+		return nil, http.StatusNotFound, errors.New("process is not found by the corId")
 	}
 
 	return &process, http.StatusOK, nil

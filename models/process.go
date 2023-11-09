@@ -7,10 +7,10 @@ type Process struct {
 	CorId         *string                `json:"corId" bson:"corId"`
 	Event         *string                `json:"event" bson:"event"`
 	EventStatus   *string                `json:"eventStatus" bson:"eventStatus"`
-	CreatorName   *string                `json:"creatorName" bson:"creatorName,omitempty"`
-	ChallengeName *string                `json:"challengeName" bson:"challengeName,omitempty"`
-	ImageName     *string                `json:"imageName" bson:"imageName,omitempty"`
-	ImageTag      *string                `json:"imageTag" bson:"imageTag,omitempty"`
-	Participant   *string                `json:"participant" bson:"participant,omitempty"`
-	Participants  *[]string              `json:"participants" bson:"participants,omitempty"`
+	CreatorName   *string                `json:"creatorName,omitempty" bson:"creatorName,omitempty"`
+	ChallengeName *string                `json:"challengeName,omitempty" bson:"challengeName,omitempty"`
+	ImageName     *string                `json:"imageName,omitempty" bson:"imageName,omitempty"`
+	ImageTag      *string                `json:"imageTag,omitempty" bson:"imageTag,omitempty"`
+	Participant   *string                `json:"participant,omitempty" bson:"participant,omitempty"`
+	Participants  *[]string              `json:"participants,omitempty" bson:"participants,omitempty"`
 }
