@@ -1,4 +1,4 @@
-// +integration
+// +build integration
 
 package controllers
 
