@@ -33,7 +33,7 @@ func InitRoutes() {
 
 	challenge := controllers.NewChallengeController(configs.Client)
 	image := controllers.NewImageController(configs.Client)
-	process := new(controllers.ProcessController)
+	process := controllers.NewProcessController(configs.Client)
 	attempt := new(controllers.AttemptController)
 
 	router := gin.Default()

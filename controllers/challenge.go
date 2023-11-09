@@ -3,8 +3,8 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"platform_api/collections"
 	"platform_api/mq"
-	"platform_api/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
@@ -13,15 +13,15 @@ import (
 )
 
 // ChallengeController is the controller for handling challenges.
-type ChallengeController struct{
-	ChallengeService	services.ChallengeService
-	ImageService		services.ImageService
+type ChallengeController struct {
+	ChallengeCollection collections.ChallengeCollection
+	ImageCollection     collections.ImageCollection
 }
 
 func NewChallengeController(client *mongo.Client) *ChallengeController {
 	return &ChallengeController{
-		ChallengeService: *services.NewChallengeService(client),
-		ImageService: *services.NewImageService(client),
+		ChallengeCollection: *collections.NewChallengeCollection(client),
+		ImageCollection:     *collections.NewImageCollection(client),
 	}
 }
 
@@ -33,7 +33,7 @@ func NewChallengeController(client *mongo.Client) *ChallengeController {
 // @Failure		500	{object}	models.HTTPError	"Failed to retrieve challenges"
 // @Router			/challenge [get]
 func (t ChallengeController) GetAllChallenges(c *gin.Context) {
-	challenges, statusCode, err := t.ChallengeService.GetAllChallenges()
+	challenges, statusCode, err := t.ChallengeCollection.GetAllChallenges()
 	if err != nil {
 		handleError(
 			c,
@@ -59,7 +59,7 @@ func (t ChallengeController) GetAllChallenges(c *gin.Context) {
 func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 	corId := c.Param("corId")
 
-	challenge, statusCode, err := t.ChallengeService.GetChallengeByCorID(corId)
+	challenge, statusCode, err := t.ChallengeCollection.GetChallengeByCorID(corId)
 	if err != nil {
 		handleError(
 			c,
@@ -85,8 +85,8 @@ func (t ChallengeController) GetChallengeByCorID(c *gin.Context) {
 // @Router			/challenge/creator/{creatorName} [get]
 func (t ChallengeController) GetChallengeByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
-	
-	challenges, statusCode, err := t.ChallengeService.GetChallengeByCreatorName(creatorName)
+
+	challenges, statusCode, err := t.ChallengeCollection.GetChallengeByCreatorName(creatorName)
 	if err != nil {
 		handleError(
 			c,
@@ -157,7 +157,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 	}
 
 	// check if image exists
-	statusCode, err := t.ImageService.CheckImageExists(req.ImageName, req.ImageTag, req.CreatorName)
+	statusCode, err := t.ImageCollection.CheckImageExists(req.ImageName, req.ImageTag, req.CreatorName)
 	if err != nil {
 		handleError(
 			c,
@@ -169,7 +169,7 @@ func (t ChallengeController) CreateChallenge(c *gin.Context) {
 	}
 
 	// check if the challenge name already exists
-	statusCode, err = t.ChallengeService.CheckChallengeByChallengeAndCreatorName(req.CreatorName, req.ChallengeName)
+	statusCode, err = t.ChallengeCollection.CheckChallengeByChallengeAndCreatorName(req.CreatorName, req.ChallengeName)
 	if err != nil {
 		handleError(
 			c,
