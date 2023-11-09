@@ -101,9 +101,34 @@ func InitIndexes(client *mongo.Client) {
 		log.Fatal(err)
 	}
 
+	attemptCollection := OpenCollection(client, "attempt")
+
+	attemptIndexModel := []mongo.IndexModel{
+		{
+			Keys: bson.D{
+				{Key: "token", Value: 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys: bson.D{
+				{Key: "challengeName", Value: 1},
+				{Key: "creatorName", Value: 1},
+				{Key: "participant", Value: 1},
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	}
+	attemptIndexCreated, err := attemptCollection.Indexes().CreateMany(context.Background(), attemptIndexModel)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
 	fmt.Printf("Created Image Index %s\n", imageIndexCreated)
 	fmt.Printf("Created Challenge Index %s\n", challengeIndexCreated)
 	fmt.Printf("Created Engine Index %s\n", processIndexCreated)
+	fmt.Printf("Created Engine Index %s\n", attemptIndexCreated)
 }
 
 func OpenCollection(client *mongo.Client, collectionName string) *mongo.Collection {
