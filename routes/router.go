@@ -65,6 +65,8 @@ func InitRoutes() {
 	platformChallenge.GET("/name/:creatorName", challenge.GetChallengeByCreatorName)
 	platformChallenge.GET("/status/:corId", process.GetProcessStatusByCorId)
 	platformChallenge.POST("", challenge.CreateChallenge)
+	platformChallenge.GET("/attempt/:participant", attempt.GetAllAttemptsByParticipant)
+
 
 	platformProcess := platform.Group("/process")
 	platformProcess.GET("", process.GetAllProcesses)
