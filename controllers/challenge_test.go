@@ -7,8 +7,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
+	"platform_api/configs"
 	"platform_api/models"
+
+	"github.com/gin-gonic/gin"
 
 	// "go.mongodb.org/mongo-driver/mongo"
 	"time"
@@ -16,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Seed test data
+var challengeController = NewChallengeController(configs.Client)
 
 func seed_challenges() {
 	// Create a context with a timeout
@@ -55,7 +57,7 @@ func seed_challenges() {
 	}
 
 	// Insert the document
-	_, err := challengeCollection.InsertMany(ctx, documents)
+	_, err := challengeController.ChallengeService.ChallengeCollection.InsertMany(ctx, documents)
 	if err != nil {
 		fmt.Printf("Error inserting document: %v\n", err)
 		return
@@ -68,9 +70,6 @@ func TestGetAllChallenges(t *testing.T) {
 
 	// Create a new instance of the Gin router
 	r := gin.Default()
-
-	// Create an image controller
-	challengeController := new(ChallengeController)
 
 	// Define the endpoint for the test
 	r.GET("/challenge", challengeController.GetAllChallenges)
@@ -96,9 +95,6 @@ func TestGetChallengeByCorId(t *testing.T) {
     // Create a new instance of the Gin router
 	r := gin.Default()
 
-	// Create an image controller
-	challengeController := new(ChallengeController)
-
     // Define the endpoint for the test
 	r.GET("/challenge/:corId", challengeController.GetChallengeByCorID)
 
@@ -122,9 +118,6 @@ func TestGetChallengeByCorId(t *testing.T) {
 func TestGetChallengeByCreatorName(t *testing.T) {
     // Create a new instance of the Gin router
 	r := gin.Default()
-
-	// Create an image controller
-	challengeController := new(ChallengeController)
 
     // Define the endpoint for the test
 	r.GET("/challenge/:creatorName", challengeController.GetChallengeByCreatorName)

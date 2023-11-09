@@ -1,4 +1,4 @@
-package controllers
+package services
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var imageController = NewImageController(configs.Client)
+var imageService = NewImageService(configs.Client)
 
 func seed_images() {
 	// Create a context with a timeout
@@ -51,7 +51,7 @@ func seed_images() {
 	}
 
 	// Insert the document
-	_, err := imageController.ImageService.ImageCollection.InsertMany(ctx, documents)
+	_, err := imageCollection.InsertMany(ctx, documents)
 	if err != nil {
 		fmt.Printf("Error inserting document: %v\n", err)
 		return
@@ -66,7 +66,7 @@ func TestGetAllImages(t *testing.T) {
 	r := gin.Default()
 
 	// Define the endpoint for the test
-	r.GET("/image", imageController.GetAllImages)
+	r.GET("/image", imageService.GetAllImages)
 
 	// Create a test request
 	req, _ := http.NewRequest("GET", "/image", nil)
@@ -88,6 +88,9 @@ func TestGetAllImages(t *testing.T) {
 func TestGetImageByCorId(t *testing.T) {
     // Create a new instance of the Gin router
 	r := gin.Default()
+
+	// Create an image controller
+	imageController := new(ImageController)
 
     // Define the endpoint for the test
 	r.GET("/image/:corId", imageController.GetImageByCorId)
@@ -112,6 +115,9 @@ func TestGetImageByCorId(t *testing.T) {
 func TestGetImageByCreatorName(t *testing.T) {
     // Create a new instance of the Gin router
 	r := gin.Default()
+
+	// Create an image controller
+	imageController := new(ImageController)
 
     // Define the endpoint for the test
 	r.GET("/image/name/:creatorName", imageController.GetImageByCreatorName)
