@@ -6,18 +6,18 @@ services:
   ################################
   # Platform-API
   ################################
-  # platform-api:
-  #   image: platform-api:latest
-  #   container_name: my-platform-api
-  #   ports:
-  #     - "8080:8080"
-  #   volumes:
-  #     - ./secrets/test.env:/app/secrets/.env
-  #   build:
-  #     context: .
-  #     dockerfile: docker/Dockerfile.test
-  #   depends_on:
-  #     - mongo
+  platform-api:
+    image: platform-api:latest
+    container_name: my-platform-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./secrets/.env:/app/secrets/.env
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    depends_on:
+      - mongo
 
   ################################
   # MongoDB: Database

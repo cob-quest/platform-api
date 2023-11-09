@@ -21,7 +21,7 @@ var (
 
 func InitEnv() {
 	// loads environment variables
-	err := godotenv.Load("../secrets/.env")
+	err := godotenv.Load("secrets/.env")
 	if err != nil {
 		panic("Error loading env file")
 	}
@@ -41,7 +41,7 @@ func InitEnv() {
 }
 
 func GetMongoURI() string {
-	err := godotenv.Load("../secrets/.env")
+	err := godotenv.Load("secrets/.env")
 	if err != nil {
 		panic("Error loading env file")
 	}
