@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"platform_api/collections"
-	"platform_api/configs"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +15,7 @@ func NewProcessController(client *mongo.Client) *ProcessController {
 	return &ProcessController{ProcessCollection: *collections.NewProcessCollection(client)}
 }
 
-var processCollection *mongo.Collection = configs.OpenCollection(configs.Client, "process_engine")
+// var processCollection *mongo.Collection = configs.OpenCollection(configs.Client, "process_engine")
 
 // GetAllProcesses godoc
 //
