@@ -76,6 +76,7 @@ func InitRoutes() {
 	platformAttempt.GET("/status/:corId", process.GetProcessStatusByCorId)
 	platformAttempt.GET("/:token", attempt.GetOneAttemptByToken)
 	platformAttempt.POST("/submit", attempt.SubmitAttemptByToken)
+	platformAttempt.GET("", attempt.GetAllAttempt)
 
 
 	platformResult := platform.Group("/result")

@@ -20,6 +20,24 @@ func NewAttemptCollection(client *mongo.Client) *AttemptCollection {
 	return &AttemptCollection{Collection: configs.OpenCollection(client, "attempt")}
 }
 
+func (t AttemptCollection) GetAllAttempts() (*[]models.Attempt, int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := t.Collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	var attempts []models.Attempt
+	err = cursor.All(ctx, &attempts)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	return &attempts, http.StatusOK, nil
+}
+
 func (t AttemptCollection) GetOneAttemptByToken(token string) (*models.Attempt, int, error) {
 	if token == "" {
 		return nil, http.StatusBadRequest, errors.New("invalid token parameter")

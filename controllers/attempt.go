@@ -24,6 +24,21 @@ func NewAttemptController(client *mongo.Client) *AttemptController {
 
 // var attemptCollection *mongo.Collection = configs.OpenCollection(configs.Client, "attempt")
 
+func (t AttemptController) GetAllAttempt(c *gin.Context) {
+	attempts, statusCode, err := t.AttemptCollection.GetAllAttempts()
+	if err != nil {
+		handleError(
+			c,
+			statusCode,
+			"Failed to retrieve attempts",
+			err,
+		)
+		return
+	}
+
+	c.JSON(statusCode, *attempts)
+}
+
 // GetOneAttemptByToken finds and returns a challenge attempt by its token.
 //	@Summary		Retrieve attempt by token
 //	@Description	Get details of a specific attempt by token
