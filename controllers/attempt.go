@@ -1,39 +1,28 @@
 package controllers
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
-	"platform_api/configs"
+	"platform_api/collections"
 	"platform_api/models"
+
 	"platform_api/mq"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type AttemptController struct{}
-
-// AttemptBody is the request body for an attempt
-//	@Description	AttemptBody is used to validate the request body for starting or getting an attempt.
-//	@Name			AttemptBody
-type AttemptBody struct {
-	Token string `json:"token" validate:"required"`
-	// Email string `json:"email" validate:"required"`
-	ChallengeName     string `json:"challengeName" bson:"challengeName"`
-	CreatorName       string `json:"creatorName" bson:"creatorName"`
-	Participant       string `json:"participant" bson:"participant"`
-	ImageRegistryLink string `json:"imageRegistryLink" bson:"imageRegistryLink"`
-	CorId             string `json:"corId"`
-	EventStatus       string `json:"eventStatus"`
+type AttemptController struct{
+	AttemptCollection collections.AttemptCollection
 }
 
-var attemptCollection *mongo.Collection = configs.OpenCollection(configs.Client, "attempt")
+func NewAttemptController(client *mongo.Client) *AttemptController {
+	return &AttemptController{AttemptCollection: *collections.NewAttemptCollection(client)}
+}
+
+// var attemptCollection *mongo.Collection = configs.OpenCollection(configs.Client, "attempt")
 
 // GetOneAttemptByToken finds and returns a challenge attempt by its token.
 //	@Summary		Retrieve attempt by token
@@ -48,46 +37,19 @@ var attemptCollection *mongo.Collection = configs.OpenCollection(configs.Client,
 //	@Router			/platform/attempt/{token} [get]
 func (t AttemptController) GetOneAttemptByToken(c *gin.Context) {
 	token := c.Param("token")
-	if token == "" {
+	
+	attemptSingle, statusCode, err := t.AttemptCollection.GetOneAttemptByToken(token)
+	if err != nil {
 		handleError(
 			c,
-			http.StatusInternalServerError,
-			"Invalid token",
-			errors.New("token cannot be empty"),
-		)
-		return
-	}
-
-	// ctx for 10s
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// find the challenge with the specified ID
-	var attemptSingle models.Attempt
-	filter := bson.D{
-		{Key: "token", Value: token},
-		// {Key: "email", Value: req.Email},
-	}
-	err := attemptCollection.FindOne(ctx, filter).Decode(&attemptSingle)
-	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
-		handleError(
-			c,
-			http.StatusInternalServerError,
-			"Invalid Token or Email",
-			err,
-		)
-		return
-	} else if err != nil {
-		handleError(
-			c,
-			http.StatusInternalServerError,
-			"Invalid Token or Email",
+			statusCode,
+			"Failed to retrieve attempt",
 			err,
 		)
 		return
 	}
 
-	c.JSON(http.StatusOK, attemptSingle)
+	c.JSON(statusCode, *attemptSingle)
 }
 
 // StartAttempt creates a new attempt for a challenge.
@@ -104,7 +66,7 @@ func (t AttemptController) GetOneAttemptByToken(c *gin.Context) {
 func (t AttemptController) StartAttempt(c *gin.Context) {
 
 	// parse body
-	var req AttemptBody
+	var req models.AttemptBody
 	err := json.NewDecoder(c.Request.Body).Decode(&req)
 	if err != nil {
 		handleError(
@@ -129,30 +91,12 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 		return
 	}
 
-	// ctx for 10s
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// find the challenge with the specified ID
-	var attemptSingle models.Attempt
-	filter := bson.D{
-		{Key: "token", Value: req.Token},
-		// {Key: "email", Value: req.Email},
-	}
-	err = attemptCollection.FindOne(ctx, filter).Decode(&attemptSingle)
-	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
+	attemptSingle, statusCode, err := t.AttemptCollection.GetOneAttemptByToken(req.Token)
+	if err != nil {
 		handleError(
 			c,
-			http.StatusBadRequest,
-			"Invalid token",
-			err,
-		)
-		return
-	} else if err != nil {
-		handleError(
-			c,
-			http.StatusBadRequest,
-			"Invalid Token",
+			statusCode,
+			"Failed to retrieve attempt",
 			err,
 		)
 		return
@@ -215,14 +159,8 @@ func (t AttemptController) StartAttempt(c *gin.Context) {
 	)
 }
 
-// POST Handler Body
-type AttemptSubmitBody struct {
-	Token string `json:"token" validate:"required"`
-	Result float64 `json:"result" validate:"required"`
-}
-
 func (t AttemptController) SubmitAttemptByToken(c *gin.Context) {
-	var req AttemptSubmitBody
+	var req models.AttemptSubmitBody
 	err := json.NewDecoder(c.Request.Body).Decode(&req)
 	if err != nil {
 		handleError(
@@ -247,28 +185,12 @@ func (t AttemptController) SubmitAttemptByToken(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	filter := bson.D{{Key: "token", Value: req.Token}}
-
-	// Create an update document to update the value of the object.
-	var attempt models.Attempt
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "result", Value: req.Result}}}}
-	err = attemptCollection.FindOneAndUpdate(ctx, filter, update).Decode(&attempt)
-
-	if err != nil && errors.Is(err, mongo.ErrNoDocuments) {
+	statusCode, err := t.AttemptCollection.UpdateAnAttempt(&req, req.Token)
+	if err != nil {
 		handleError(
 			c,
-			http.StatusBadRequest,
-			"Invalid token",
-			err,
-		)
-		return
-	} else if err != nil {
-		handleError(
-			c,
-			http.StatusBadRequest,
-			"Invalid Token",
+			statusCode,
+			"Failed to update an attempt",
 			err,
 		)
 		return
