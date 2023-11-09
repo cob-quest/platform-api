@@ -1,3 +1,5 @@
+// +integration
+
 package controllers
 
 import (
