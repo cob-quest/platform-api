@@ -41,6 +41,20 @@ lint:
     paths:
       - gl-code-quality-report.json
 
+integration-test:
+  stage: Test
+  image: docker:24.0.2
+  services:
+    - docker:24.0.2-dind
+  script:
+    - docker compose -f docker-compose-test.yaml up --build -d
+    - docker compose run --rm process-engine go test -v -tags=integration ./... > integration-test-results.txt
+    - docker compose -f docker-compose-test.yaml down
+  artifacts:
+    when: always
+    paths:
+      - integration-test-results.txt
+
 release-image:  
   stage: Release  
   image: docker:24.0.2
