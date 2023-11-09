@@ -12,7 +12,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./secrets/.env:/app/secrets/.env
+      - ./secrets/testing.env:/app/secrets/.env
     build:
       context: .
       dockerfile: docker/Dockerfile.test
