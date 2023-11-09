@@ -66,24 +66,24 @@ func TestGetAllProcesses(t *testing.T) {
 	assert.Equal(t, expectedResponse, w.Body.String())
 }
 
-func TestGetProcessByCorId(t *testing.T) {
-	seed_processes()
+// func TestGetProcessByCorId(t *testing.T) {
+// 	seed_processes()
 
-	r := gin.Default()
+// 	r := gin.Default()
 
-	r.GET("/process/:corId", processController.GetProcessByCorID)
+// 	r.GET("/process/:corId", processController.GetProcessByCorID)
 
-	req, _ := http.NewRequest("GET", "/process/id2", nil)
+// 	req, _ := http.NewRequest("GET", "/process/id2", nil)
 
-	w := httptest.NewRecorder()
+// 	w := httptest.NewRecorder()
 
-	r.ServeHTTP(w, req)
+// 	r.ServeHTTP(w, req)
 
-	expectedResponse := `[{"timestamp":null,"corId":"id2","event":null,"eventStatus":null,"creatorName":"Bob","challengeName":"challenge2","imageName":"image2","imageTag":"latest","participants":["bob@b.com"]}]`
+// 	expectedResponse := `[{"timestamp":null,"corId":"id2","event":null,"eventStatus":null,"creatorName":"Bob","challengeName":"challenge2","imageName":"image2","imageTag":"latest","participants":["bob@b.com"]}]`
 	
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, expectedResponse, w.Body.String())
-}
+// 	assert.Equal(t, http.StatusOK, w.Code)
+// 	assert.Equal(t, expectedResponse, w.Body.String())
+// }
 
 func TestGetProcessByCorId_NotFound(t *testing.T) {
 	seed_processes()

@@ -70,7 +70,7 @@ func InitRoutes() {
 
 	platformProcess := platform.Group("/process")
 	platformProcess.GET("", process.GetAllProcesses)
-	platformProcess.GET("/:corId", process.GetProcessByCorID)
+	platformProcess.GET("/:corId", process.GetProcessStatusByCorId)
 	platformProcess.GET("/name/:creatorName", process.GetProcessByCreatorName)
 
 	platformAttempt := platform.Group("/attempt")
