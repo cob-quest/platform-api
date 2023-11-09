@@ -220,39 +220,14 @@ func (t AttemptController) SubmitAttemptByToken(c *gin.Context) {
 }
 
 func (t AttemptController) GetAllAttemptsByParticipant(c *gin.Context) {
-
 	participant := c.Param("participant")
-	if participant == "" {
-		handleError(
-			c,
-			http.StatusBadRequest,
-			"Invalid token",
-			errors.New("token cannot be empty"),
-		)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	filter := bson.D{{Key: "participant", Value: participant}}
-
-	// Create an update document to update the value of the object.
-	var attempts []models.Attempt
-	cursor, err := attemptCollection.Find(ctx, filter)
+	
+	attempts, statusCode, err := t.AttemptCollection.GetAllAttemptsByParticipant(participant)
 	if err != nil {
 		handleError(
 			c,
-			http.StatusBadRequest,
-			"Request not found",
-			err,
-		)
-	}
-	err = cursor.All(ctx, &attempts)
-	if err != nil {
-		handleError(
-			c,
-			http.StatusBadRequest,
-			"Request not found",
+			statusCode,
+			"Failed to retrieve attempts",
 			err,
 		)
 	}

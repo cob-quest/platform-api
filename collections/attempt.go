@@ -88,3 +88,26 @@ func (t AttemptCollection) UpdateAnAttempt(attemptSubmitBody *models.AttemptSubm
 
 	return http.StatusOK, nil
 }
+
+func (t AttemptCollection) GetAllAttemptsByParticipant(participant string) (*[]models.Attempt, int, error) {
+	if participant == "" {
+		return nil, http.StatusBadRequest, errors.New("participant cannot be empty")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "participant", Value: participant}}
+
+	// Create an update document to update the value of the object.
+	var attempts []models.Attempt
+	cursor, err := t.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+	err = cursor.All(ctx, &attempts)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	return &attempts, http.StatusOK, nil
+}
