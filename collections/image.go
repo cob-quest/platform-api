@@ -1,4 +1,4 @@
-package services
+package collections
 
 import (
 	"context"
@@ -13,20 +13,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ImageService struct {
-	ImageCollection *mongo.Collection
+type ImageCollection struct {
+	Collection *mongo.Collection
 }
 
-func NewImageService(client *mongo.Client) *ImageService {
-	return &ImageService{ImageCollection: configs.OpenCollection(client, "image_builder")}
+func NewImageCollection(client *mongo.Client) *ImageCollection {
+	return &ImageCollection{Collection: configs.OpenCollection(client, "image_builder")}
 }
 
-func (t ImageService) GetAllImages() (*[]models.Image, int, error) {
+func (t ImageCollection) GetAllImages() (*[]models.Image, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	opts := options.Find()
-	cursor, err := t.ImageCollection.Find(ctx, bson.M{}, opts)
+	cursor, err := t.Collection.Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -43,7 +43,7 @@ func (t ImageService) GetAllImages() (*[]models.Image, int, error) {
 	return &images, http.StatusOK, nil
 }
 
-func (t ImageService) GetImageByCorId(corId string) (*models.Image, int, error) {
+func (t ImageCollection) GetImageByCorId(corId string) (*models.Image, int, error) {
 	if corId == "" {
 		return nil, http.StatusBadRequest, errors.New("corId cannot be empty")
 	}
@@ -54,10 +54,10 @@ func (t ImageService) GetImageByCorId(corId string) (*models.Image, int, error) 
 	var image models.Image
 
 	filter := bson.D{{Key: "corId", Value: corId}}
-	err := t.ImageCollection.FindOne(ctx, filter).Decode(&image)
+	err := t.Collection.FindOne(ctx, filter).Decode(&image)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil,  http.StatusNotFound, errors.New("no image found with given challenge corId")
+			return nil, http.StatusNotFound, errors.New("no image found with given challenge corId")
 		} else {
 			return nil, http.StatusInternalServerError, err
 		}
@@ -66,7 +66,7 @@ func (t ImageService) GetImageByCorId(corId string) (*models.Image, int, error) 
 	return &image, http.StatusOK, nil
 }
 
-func (t ImageService) GetImageByCreatorName(creatorName string) (*[]models.Image, int, error) {
+func (t ImageCollection) GetImageByCreatorName(creatorName string) (*[]models.Image, int, error) {
 	if creatorName == "" {
 		return nil, http.StatusBadRequest, errors.New("creatorName cannot be empty")
 	}
@@ -75,7 +75,7 @@ func (t ImageService) GetImageByCreatorName(creatorName string) (*[]models.Image
 	defer cancel()
 
 	filter := bson.D{{Key: "creatorName", Value: creatorName}}
-	cursor, err := t.ImageCollection.Find(ctx, filter)
+	cursor, err := t.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -96,14 +96,14 @@ func (t ImageService) GetImageByCreatorName(creatorName string) (*[]models.Image
 	return &images, http.StatusOK, nil
 }
 
-func (t ImageService) CheckImageByImageAndCreatorName(imageName string, creatorName string) (int, error) {
+func (t ImageCollection) CheckImageByImageAndCreatorName(imageName string, creatorName string) (int, error) {
 	if creatorName == "" || imageName == "" {
 		return http.StatusBadRequest, errors.New("creator and image name cannot be empty")
-	}	
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	var challenge models.Challenge
 	filter := bson.D{{
 		Key:   "imageName",
@@ -113,13 +113,40 @@ func (t ImageService) CheckImageByImageAndCreatorName(imageName string, creatorN
 		Value: creatorName,
 	}}
 
-	err := t.ImageCollection.FindOne(ctx, filter).Decode(&challenge)
+	err := t.Collection.FindOne(ctx, filter).Decode(&challenge)
 	if err == nil {
 		return http.StatusBadRequest, errors.New("challenge name already exists")
 	}
 
 	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}
+
+// ------- FOR CHALLENGE CONTROLLER ---------
+func (t ImageCollection) CheckImageExists(imageName string, imageTag string, creatorName string) (int, error) {
+	if imageName == "" || imageTag == "" || creatorName == "" {
+		return http.StatusBadRequest, errors.New("image name, tag, and creatorName cannot be empty")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var image models.Image
+	filter := bson.D{
+		{Key: "imageName", Value: imageName},
+		{Key: "creatorName", Value: creatorName},
+		{Key: "imageTag", Value: imageTag},
+	}
+	err := t.Collection.FindOne(ctx, filter).Decode(&image)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return http.StatusNotFound, errors.New("image is not found given image name, tag, and creatorName")
+		} else {
+			return http.StatusInternalServerError, err
+		}
 	}
 
 	return http.StatusOK, nil

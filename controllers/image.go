@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"platform_api/collections"
 	"platform_api/mq"
 	"platform_api/services"
 
@@ -15,12 +16,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type ImageController struct{
-	ImageService	services.ImageService
+type ImageController struct {
+	ImageService collections.ImageCollection
 }
 
 func NewImageController(client *mongo.Client) *ImageController {
-	return &ImageController{ImageService: *services.NewImageService(client)}
+	return &ImageController{ImageService: *collections.NewImageCollection(client)}
 }
 
 // var imageCollection *mongo.Collection = configs.OpenCollection(configs.Client, "image_builder")
@@ -63,7 +64,7 @@ func (t ImageController) GetAllImages(c *gin.Context) {
 //	@Router			/image/{corId} [get]
 func (t ImageController) GetImageByCorId(c *gin.Context) {
 	corId := c.Param("corId")
-	
+
 	image, statusCode, err := t.ImageService.GetImageByCorId(corId)
 	if err != nil {
 		handleError(
@@ -92,7 +93,7 @@ func (t ImageController) GetImageByCorId(c *gin.Context) {
 //	@Router			/image/byCreator/{creatorName} [get]
 func (t ImageController) GetImageByCreatorName(c *gin.Context) {
 	creatorName := c.Param("creatorName")
-	
+
 	images, statusCode, err := t.ImageService.GetImageByCreatorName(creatorName)
 	if err != nil {
 		handleError(

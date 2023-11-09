@@ -18,6 +18,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// Seed test data
+
 var challengeController = NewChallengeController(configs.Client)
 
 func seed_challenges() {
@@ -57,7 +59,7 @@ func seed_challenges() {
 	}
 
 	// Insert the document
-	_, err := challengeController.ChallengeService.ChallengeCollection.InsertMany(ctx, documents)
+	_, err := configs.OpenCollection(configs.Client, "challenge").InsertMany(ctx, documents)
 	if err != nil {
 		fmt.Printf("Error inserting document: %v\n", err)
 		return

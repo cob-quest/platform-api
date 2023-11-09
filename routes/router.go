@@ -33,8 +33,8 @@ func InitRoutes() {
 
 	challenge := controllers.NewChallengeController(configs.Client)
 	image := controllers.NewImageController(configs.Client)
-	process := new(controllers.ProcessController)
-	attempt := new(controllers.AttemptController)
+	process := controllers.NewProcessController(configs.Client)
+	attempt := controllers.NewAttemptController(configs.Client)
 
 	router := gin.Default()
 
@@ -78,6 +78,7 @@ func InitRoutes() {
 	platformAttempt.GET("/status/:corId", process.GetProcessStatusByCorId)
 	platformAttempt.GET("/:token", attempt.GetOneAttemptByToken)
 	platformAttempt.POST("/submit", attempt.SubmitAttemptByToken)
+	platformAttempt.GET("", attempt.GetAllAttempt)
 
 
 	platformResult := platform.Group("/result")
