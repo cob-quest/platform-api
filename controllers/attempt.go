@@ -40,6 +40,7 @@ func (t AttemptController) GetAllAttempt(c *gin.Context) {
 }
 
 // GetOneAttemptByToken finds and returns a challenge attempt by its token.
+//
 //	@Summary		Retrieve attempt by token
 //	@Description	Get details of a specific attempt by token
 //	@Tags			attempt
@@ -68,6 +69,7 @@ func (t AttemptController) GetOneAttemptByToken(c *gin.Context) {
 }
 
 // StartAttempt creates a new attempt for a challenge.
+//
 //	@Summary		Start a new challenge attempt
 //	@Description	Begin a new attempt for a specified challenge
 //	@Tags			attempt
@@ -214,5 +216,49 @@ func (t AttemptController) SubmitAttemptByToken(c *gin.Context) {
 	c.JSON(
 		http.StatusOK,
 		gin.H{"submitted": true},
+	)
+}
+
+func (t AttemptController) GetAllAttemptsByParticipant(c *gin.Context) {
+
+	participant := c.Param("participant")
+	if participant == "" {
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Invalid token",
+			errors.New("token cannot be empty"),
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	filter := bson.D{{Key: "participant", Value: participant}}
+
+	// Create an update document to update the value of the object.
+	var attempts []models.Attempt
+	cursor, err := attemptCollection.Find(ctx, filter)
+	if err != nil {
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Request not found",
+			err,
+		)
+	}
+	err = cursor.All(ctx, &attempts)
+	if err != nil {
+		handleError(
+			c,
+			http.StatusBadRequest,
+			"Request not found",
+			err,
+		)
+	}
+
+	c.JSON(
+		http.StatusOK,
+		attempts,
 	)
 }

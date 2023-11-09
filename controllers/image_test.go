@@ -51,7 +51,7 @@ func seed_images() {
 	}
 
 	// Insert the document
-	_, err := configs.OpenCollection(configs.Client, "image_builder").InsertMany(ctx, documents)
+	_, err := imageController.ImageService.ImageCollection.InsertMany(ctx, documents)
 	if err != nil {
 		fmt.Printf("Error inserting document: %v\n", err)
 		return
